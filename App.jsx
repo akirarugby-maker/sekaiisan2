@@ -9,7 +9,7 @@
 フェーズ5:  共通コンポーネント    [✅] 完了
 フェーズ6:  ホーム画面            [✅] 完了
 フェーズ7:  ①基礎知識 前半       [✅] 完了
-フェーズ8:  ①基礎知識 後半       [ ] 未着手
+フェーズ8:  ①基礎知識 後半       [✅] 完了
 フェーズ9:  ②地域別 前半         [ ] 未着手
 フェーズ10: ②地域別 後半         [ ] 未着手
 フェーズ11: ③時代別              [ ] 未着手
@@ -18,7 +18,7 @@
 フェーズ14: AI機能統合            [ ] 未着手
 フェーズ15: 仕上げ・結合          [ ] 未着手
 ========================================
-最終更新: フェーズ7完了後
+最終更新: フェーズ8完了後
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -2692,6 +2692,68 @@ const sectionAQuizzes = [
     explanation: "アラビアオリックス保護区（オマーン）が2007年に初の登録取消。保護区の大幅縮小が理由。" },
 ];
 
+// 📍 CHECKPOINT: フェーズ8 完了
+
+const sectionCQuizzes = [
+  { question: "富士山の世界遺産種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "景観遺産"], correctIndex: 0,
+    explanation: "富士山は「信仰の対象と芸術の源泉」として文化遺産（2013年登録・基準iii・vi）。自然遺産ではない点が頻出！" },
+  { question: "屋久島の世界遺産種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "文化的景観"], correctIndex: 1,
+    explanation: "屋久島は屋久杉の巨大な森が評価された自然遺産（1993年・基準vii・ix）。" },
+  { question: "アンコール遺跡群の種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "文化的景観"], correctIndex: 0,
+    explanation: "クメール帝国の建築・芸術の傑作として文化遺産（基準i〜iv）。" },
+  { question: "タスマニア原生地域の種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "危機遺産"], correctIndex: 2,
+    explanation: "アボリジニの文化的景観と優れた自然の両方が評価された複合遺産。" },
+  { question: "白川郷・五箇山の種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "文化的景観"], correctIndex: 0,
+    explanation: "合掌造り集落の伝統的居住形態として文化遺産（基準iv・v）。自然遺産ではない点に注意！" },
+  { question: "マチュ・ピチュの種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "景観遺産"], correctIndex: 2,
+    explanation: "インカ遺跡（文化）とアンデスの山岳景観（自然）の両方が評価された複合遺産。" },
+  { question: "知床の種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "危機遺産"], correctIndex: 1,
+    explanation: "流氷がもたらす豊かな生態系が評価された自然遺産（2005年・基準ix・x）。" },
+  { question: "小笠原諸島の種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "文化的景観"], correctIndex: 1,
+    explanation: "「東洋のガラパゴス」として固有種の多い生態系が評価された自然遺産（2011年・基準x）。" },
+  { question: "ピレネー山脈のモン・ペルデュの種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "景観遺産"], correctIndex: 2,
+    explanation: "フランス・スペイン共同登録の複合遺産。山岳景観と牧畜文化の両方が評価。" },
+  { question: "ガラパゴス諸島の種別は？",
+    choices: ["文化遺産", "自然遺産", "複合遺産", "危機遺産"], correctIndex: 1,
+    explanation: "ダーウィンの進化論にも影響した独自の生態系が評価された自然遺産（基準vii〜x・全4基準）。" },
+];
+
+const sectionEQuizzes = [
+  { question: "ケルン大聖堂の建築様式は？",
+    choices: ["ロマネスク様式", "ゴシック様式", "バロック様式", "ルネサンス様式"], correctIndex: 1,
+    explanation: "尖頭アーチ・ステンドグラス・飛び梁がゴシック様式の証。ケルン大聖堂は632年かけて完成。" },
+  { question: "ヴェルサイユ宮殿の建築様式は？",
+    choices: ["ゴシック様式", "ルネサンス様式", "バロック様式", "ロマネスク様式"], correctIndex: 2,
+    explanation: "豪華な装飾・整形庭園・動的なデザインがバロック様式の特徴。絶対王政の権威の象徴。" },
+  { question: "タージ・マハルの建築様式は？",
+    choices: ["ヒンドゥー建築", "イスラム建築", "バロック様式", "仏教建築"], correctIndex: 1,
+    explanation: "ミナレット・アーチドーム・アラベスク装飾がイスラム建築の特徴。ムガル帝国様式の最高傑作。" },
+  { question: "アンコール・ワットの建築様式は？",
+    choices: ["イスラム建築", "仏教建築", "ヒンドゥー建築", "バロック様式"], correctIndex: 2,
+    explanation: "シカラ（曲線の塔）・マンダパ・彫刻に覆われた外壁がヒンドゥー建築の特徴。" },
+  { question: "「飛び梁（フライング・バットレス）」はどの様式？",
+    choices: ["バロック様式", "ロマネスク様式", "ゴシック様式", "ルネサンス様式"], correctIndex: 2,
+    explanation: "飛び梁はゴシック様式の工法。外から壁を支え、薄い壁に大きなステンドグラスを可能にした。" },
+  { question: "ボロブドゥール寺院の建築様式は？",
+    choices: ["ヒンドゥー建築", "イスラム建築", "仏教建築（東南アジア）", "ロマネスク様式"], correctIndex: 2,
+    explanation: "ストゥーパと仏像が並ぶ「石の曼荼羅」。仏教建築（東南アジア）の最高傑作。" },
+  { question: "「ミナレット（尖塔）」はどの様式の特徴？",
+    choices: ["ヒンドゥー建築", "仏教建築", "ゴシック様式", "イスラム建築"], correctIndex: 3,
+    explanation: "ミナレットはモスクの尖塔。アザーン（礼拝の呼びかけ）に使われるイスラム建築の特徴。" },
+  { question: "姫路城の建築様式は？",
+    choices: ["バロック様式", "日本の城郭建築", "ルネサンス様式", "ゴシック様式"], correctIndex: 1,
+    explanation: "石垣・堀・天守閣・白漆喰が日本城郭建築の特徴。姫路城は「白鷺城」とも呼ばれる。" },
+];
+
 // ─── ①基礎知識タブ ─────────────────────────────────────────
 function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHistory, setTestHistory }) {
   const [section, setSection] = useState("A");
@@ -2701,6 +2763,21 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
   const [showResult, setShowResult] = useState(false);
   // Section B state
   const [openCriteria, setOpenCriteria] = useState(null);
+  // Section C state
+  const [quizCIdx, setQuizCIdx]       = useState(0);
+  const [quizCRes, setQuizCRes]       = useState([]);
+  const [showResC, setShowResC]       = useState(false);
+  // Section D state
+  const [showTrickAll, setShowTrickAll] = useState(false);
+  const [trickIdx, setTrickIdx]         = useState(0);
+  const [trickRes, setTrickRes]         = useState([]);
+  const [showTrickRes, setShowTrickRes] = useState(false);
+  // Section E state
+  const [openStyle, setOpenStyle]   = useState(null);
+  const [quizEIdx, setQuizEIdx]     = useState(0);
+  const [quizERes, setQuizERes]     = useState([]);
+  const [showResE, setShowResE]     = useState(false);
+  const [eMode, setEMode]           = useState("study");
 
   const prog = globalProgress.kisochishiki;
 
@@ -2863,6 +2940,269 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
     </div>
   );
 
+  // ── Section C: 遺産の分類クイズ ──────────────────────────
+  const handleCResult = (ok) => {
+    const updated = [...quizCRes, ok];
+    setQuizCRes(updated);
+    if (updated.length === sectionCQuizzes.length) {
+      setTestHistory(prev => [...prev, {
+        section: "①基礎知識 C：遺産分類",
+        correct: updated.filter(Boolean).length, total: sectionCQuizzes.length,
+        date: Date.now()
+      }]);
+      markDone("C");
+      setShowResC(true);
+    } else {
+      setTimeout(() => setQuizCIdx(i => i + 1), 900);
+    }
+  };
+
+  const renderSectionC = () => {
+    const scoreC = quizCRes.filter(Boolean).length;
+    const pctC   = sectionCQuizzes.length ? Math.round(scoreC / sectionCQuizzes.length * 100) : 0;
+    return (
+      <div>
+        <div className="section-title">🏷️ セクションC：遺産の種別分類</div>
+        <div className="card" style={{ marginBottom: 12, fontSize: 13 }}>
+          文化遺産・自然遺産・複合遺産を見分けるクイズ。全{sectionCQuizzes.length}問
+        </div>
+        <div className="card">
+          {!showResC ? (
+            <>
+              <div style={{ fontSize: 12, color: "var(--color-text-light)", marginBottom: 8 }}>
+                問題 {Math.min(quizCIdx+1, sectionCQuizzes.length)} / {sectionCQuizzes.length}
+              </div>
+              <div className="progress-bar-wrap" style={{ marginBottom: 14 }}>
+                <div className="progress-bar-fill" style={{ width: `${(quizCIdx / sectionCQuizzes.length) * 100}%` }} />
+              </div>
+              <QuizComponent key={quizCIdx} quiz={sectionCQuizzes[quizCIdx]} onResult={handleCResult} />
+            </>
+          ) : (
+            <div className="quiz-result-wrap">
+              <div className="quiz-result-score">{scoreC}/{sectionCQuizzes.length}</div>
+              <div className="quiz-result-label">正解数 ({pctC}%)</div>
+              <div className="quiz-result-msg">
+                {pctC===100?"🎉 満点！": pctC>=70?"👏 よくできました！": "📖 もう少し復習しましょう"}
+              </div>
+              <div style={{ marginTop:14, display:"flex", gap:8, justifyContent:"center" }}>
+                <button className="btn btn-primary" onClick={() => { setQuizCIdx(0); setQuizCRes([]); setShowResC(false); }}>
+                  もう一度
+                </button>
+                <button className="btn btn-ghost" onClick={() => setSection("D")}>次へ →</button>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="card">
+          <div className="card-title">📌 種別の覚え方</div>
+          {[
+            ["文化遺産", "#FF8FAB", "建築・遺跡・芸術・信仰・産業 → 人間が作ったもの"],
+            ["自然遺産", "#2e8b57", "自然美・地形・生態系・生物多様性 → 自然が作ったもの"],
+            ["複合遺産", "#6a4ca8", "文化基準(i〜vi) + 自然基準(vii〜x) の両方を満たす"],
+          ].map(([t, c, d]) => (
+            <div key={t} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:"1px solid var(--color-border)", alignItems:"flex-start" }}>
+              <span className="badge" style={{ background:`${c}20`, color:c, whiteSpace:"nowrap", marginTop:2 }}>{t}</span>
+              <span style={{ fontSize:13, lineHeight:1.5 }}>{d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // ── Section D: 危機遺産・抹消遺産・ひっかけ ──────────────
+  const trickQuizzes = trickQuestions.map((t, i) => ({
+    question: `次のうち正しい記述はどれ？（問${i+1}）`,
+    choices: [t.trap, t.correct, `どちらも正しい`, `どちらも誤り`],
+    correctIndex: 1,
+    explanation: `❌ よくある誤解「${t.trap}」→ ✅ 正しくは「${t.correct}」`
+  }));
+
+  const handleTrickResult = (ok) => {
+    const updated = [...trickRes, ok];
+    setTrickRes(updated);
+    if (updated.length === trickQuizzes.length) {
+      setTestHistory(prev => [...prev, {
+        section: "①基礎知識 D：ひっかけ問題",
+        correct: updated.filter(Boolean).length, total: trickQuizzes.length,
+        date: Date.now()
+      }]);
+      markDone("D");
+      setShowTrickRes(true);
+    } else {
+      setTimeout(() => setTrickIdx(i => i + 1), 900);
+    }
+  };
+
+  const renderSectionD = () => {
+    const scoreD = trickRes.filter(Boolean).length;
+    const pctD   = trickQuizzes.length ? Math.round(scoreD / trickQuizzes.length * 100) : 0;
+    return (
+      <div>
+        <div className="section-title">⚠️ セクションD：危機遺産・ひっかけ問題</div>
+
+        {/* 危機遺産リスト */}
+        <div className="card" style={{ marginBottom: 12 }}>
+          <div className="card-title">🚨 注目の危機遺産・登録取消</div>
+          {[
+            { name:"アラビアオリックス保護区", country:"🇴🇲 オマーン", note:"2007年・初の登録取消（保護区縮小）", color:"#dc2626" },
+            { name:"ドレスデン・エルベ渓谷", country:"🇩🇪 ドイツ", note:"2009年・登録取消（橋建設）", color:"#dc2626" },
+            { name:"リヴァプール海商都市", country:"🇬🇧 イギリス", note:"2021年・登録取消（港湾開発）", color:"#dc2626" },
+            { name:"コソボの中世建造物群", country:"🇽🇰 コソボ", note:"危機遺産継続中", color:"#f59e0b" },
+            { name:"ウィーン歴史地区", country:"🇦🇹 オーストリア", note:"高層ビル建設で危機遺産入り", color:"#f59e0b" },
+          ].map(item => (
+            <div key={item.name} style={{ padding:"8px 0", borderBottom:"1px solid var(--color-border)", fontSize:13 }}>
+              <div style={{ display:"flex", justifyContent:"space-between" }}>
+                <strong>{item.country} {item.name}</strong>
+                <span style={{ fontSize:11, color:item.color, fontWeight:700 }}>{item.color==="#dc2626"?"❌ 取消":"⚠️ 危機"}</span>
+              </div>
+              <div style={{ fontSize:11, color:"var(--color-text-light)", marginTop:2 }}>{item.note}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ひっかけクイズ */}
+        <div className="card">
+          <div className="card-title">🪤 ひっかけ問題クイズ（全{trickQuizzes.length}問）</div>
+          {!showTrickAll ? (
+            <button className="btn btn-primary" onClick={() => setShowTrickAll(true)}>クイズを開始</button>
+          ) : !showTrickRes ? (
+            <>
+              <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:8 }}>
+                問題 {Math.min(trickIdx+1, trickQuizzes.length)} / {trickQuizzes.length}
+              </div>
+              <div className="progress-bar-wrap" style={{ marginBottom:14 }}>
+                <div className="progress-bar-fill" style={{ width:`${(trickIdx/trickQuizzes.length)*100}%` }} />
+              </div>
+              <QuizComponent key={trickIdx} quiz={trickQuizzes[trickIdx]} onResult={handleTrickResult} />
+            </>
+          ) : (
+            <div className="quiz-result-wrap">
+              <div className="quiz-result-score">{scoreD}/{trickQuizzes.length}</div>
+              <div className="quiz-result-label">正解数 ({pctD}%)</div>
+              <div className="quiz-result-msg">
+                {pctD===100?"🎉 ひっかけを全部見抜いた！": pctD>=70?"👏 惜しい！もう一度確認を": "⚠️ ひっかけに注意！"}
+              </div>
+              <div style={{ marginTop:14, display:"flex", gap:8, justifyContent:"center" }}>
+                <button className="btn btn-primary" onClick={() => { setTrickIdx(0); setTrickRes([]); setShowTrickRes(false); }}>
+                  もう一度
+                </button>
+                <button className="btn btn-ghost" onClick={() => setSection("E")}>次へ →</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ひっかけ一覧 */}
+        <div className="card">
+          <div className="card-title">📋 ひっかけポイント一覧</div>
+          {trickQuestions.map(t => (
+            <div key={t.id} style={{ padding:"8px 0", borderBottom:"1px solid var(--color-border)", fontSize:13 }}>
+              <div style={{ color:"#dc2626", fontSize:12 }}>❌ {t.trap}</div>
+              <div style={{ color:"#2e8b57", fontSize:12, marginTop:2 }}>✅ {t.correct}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // ── Section E: 建築様式 ────────────────────────────────────
+  const handleEResult = (ok) => {
+    const updated = [...quizERes, ok];
+    setQuizERes(updated);
+    if (updated.length === sectionEQuizzes.length) {
+      setTestHistory(prev => [...prev, {
+        section: "①基礎知識 E：建築様式",
+        correct: updated.filter(Boolean).length, total: sectionEQuizzes.length,
+        date: Date.now()
+      }]);
+      markDone("E");
+      setShowResE(true);
+    } else {
+      setTimeout(() => setQuizEIdx(i => i + 1), 900);
+    }
+  };
+
+  const renderSectionE = () => {
+    const scoreE = quizERes.filter(Boolean).length;
+    const pctE   = sectionEQuizzes.length ? Math.round(scoreE / sectionEQuizzes.length * 100) : 0;
+    return (
+      <div>
+        <div className="section-title">🏛️ セクションE：建築様式</div>
+        <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+          <button className={`section-tab-btn${eMode==="study"?" active":""}`} onClick={() => setEMode("study")}>📚 学習</button>
+          <button className={`section-tab-btn${eMode==="quiz"?" active":""}`} onClick={() => setEMode("quiz")}>📝 クイズ</button>
+        </div>
+
+        {eMode === "study" && (
+          <div>
+            {architectureStyles.map(s => (
+              <div key={s.id} className="criteria-card">
+                <div
+                  className="criteria-card-header"
+                  style={{ background:"rgba(168,216,234,0.1)" }}
+                  onClick={() => setOpenStyle(prev => prev===s.id ? null : s.id)}
+                >
+                  <div style={{ fontSize:24, width:36, textAlign:"center" }}>🏛️</div>
+                  <div style={{ flex:1 }}>
+                    <div className="criteria-card-title">{s.name}</div>
+                    <div className="criteria-card-type">{s.era}</div>
+                  </div>
+                  <div className="criteria-chevron">{openStyle===s.id ? "▲" : "▼"}</div>
+                </div>
+                {openStyle === s.id && (
+                  <div className="criteria-card-body">
+                    <div className="criteria-tip">💡 試験ポイント：{s.tips}</div>
+                    <div style={{ marginBottom:6, fontSize:12, fontWeight:600, color:"var(--color-text-light)" }}>特徴</div>
+                    <div className="criteria-heritages" style={{ marginBottom:10 }}>
+                      {s.features.map(f => <span key={f} className="criteria-heritage-tag">{f}</span>)}
+                    </div>
+                    <div style={{ marginBottom:6, fontSize:12, fontWeight:600, color:"var(--color-text-light)" }}>代表的な遺産</div>
+                    <div className="criteria-heritages">
+                      {s.examples.map(e => <span key={e} className="criteria-heritage-tag">{e}</span>)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {eMode === "quiz" && (
+          <div className="card">
+            <div className="card-title">建築様式識別クイズ（全{sectionEQuizzes.length}問）</div>
+            {!showResE ? (
+              <>
+                <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:8 }}>
+                  問題 {Math.min(quizEIdx+1, sectionEQuizzes.length)} / {sectionEQuizzes.length}
+                </div>
+                <div className="progress-bar-wrap" style={{ marginBottom:14 }}>
+                  <div className="progress-bar-fill" style={{ width:`${(quizEIdx/sectionEQuizzes.length)*100}%` }} />
+                </div>
+                <QuizComponent key={quizEIdx} quiz={sectionEQuizzes[quizEIdx]} onResult={handleEResult} />
+              </>
+            ) : (
+              <div className="quiz-result-wrap">
+                <div className="quiz-result-score">{scoreE}/{sectionEQuizzes.length}</div>
+                <div className="quiz-result-label">正解数 ({pctE}%)</div>
+                <div className="quiz-result-msg">
+                  {pctE===100?"🎉 建築様式マスター！": pctE>=75?"👏 よくできました！": "📖 様式の特徴を再確認しよう"}
+                </div>
+                <div style={{ marginTop:14, display:"flex", gap:8, justifyContent:"center" }}>
+                  <button className="btn btn-primary" onClick={() => { setQuizEIdx(0); setQuizERes([]); setShowResE(false); }}>
+                    もう一度
+                  </button>
+                  <button className="btn btn-ghost" onClick={() => setEMode("study")}>学習に戻る</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const sections = [
     { id: "A", label: "A：UNESCO基礎", done: prog.A },
     { id: "B", label: "B：登録基準",   done: prog.B },
@@ -2890,9 +3230,9 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
 
       {section === "A" && renderSectionA()}
       {section === "B" && renderSectionB()}
-      {(section === "C" || section === "D" || section === "E") && (
-        <PlaceholderTab title={`セクション${section}（フェーズ8で実装）`} />
-      )}
+      {section === "C" && renderSectionC()}
+      {section === "D" && renderSectionD()}
+      {section === "E" && renderSectionE()}
     </div>
   );
 }
