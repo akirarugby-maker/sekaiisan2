@@ -13,12 +13,12 @@
 フェーズ9:  ②地域別 前半         [✅] 完了
 フェーズ10: ②地域別 後半         [✅] 完了
 フェーズ11: ③時代別              [✅] 完了
-フェーズ12: ④登録基準別          [ ] 未着手
+フェーズ12: ④登録基準別          [✅] 完了
 フェーズ13: ⑤苦手分析            [ ] 未着手
 フェーズ14: AI機能統合            [ ] 未着手
 フェーズ15: 仕上げ・結合          [ ] 未着手
 ========================================
-最終更新: フェーズ11完了後
+最終更新: フェーズ12完了後
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -2279,6 +2279,38 @@ const STYLES = `
     font-size: 12px; color: var(--color-text-light); margin-bottom: 10px;
   }
 
+  /* ─── 登録基準別タブ ────────────────────────── */
+  .criteria-overview-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;
+  }
+  .criteria-mini-card {
+    border-radius: var(--radius-md); padding: 12px 10px; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.18s;
+    position: relative; overflow: hidden;
+  }
+  .criteria-mini-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .criteria-mini-card.done  { border-color: #2e8b57; }
+  .criteria-mini-num  { font-size: 22px; font-weight: 900; margin-bottom: 2px; }
+  .criteria-mini-label{ font-size: 11px; font-weight: 700; line-height: 1.3; }
+  .criteria-mini-type { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+  .criteria-done-mark { position:absolute; top:6px; right:8px; font-size:12px; color:#2e8b57; }
+
+  .criteria-detail-header {
+    border-radius: var(--radius-md); padding: 18px; margin-bottom: 14px;
+  }
+  .criteria-detail-num   { font-size: 32px; font-weight: 900; margin-bottom: 4px; }
+  .criteria-detail-label { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .criteria-detail-desc  { font-size: 13px; line-height: 1.8; }
+
+  .compare-box {
+    background: rgba(255,209,102,0.12); border: 1px solid var(--color-accent);
+    border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;
+  }
+  .compare-box-label { font-size: 11px; font-weight: 700; color: #a07800; margin-bottom: 6px; }
+  .compare-vs { display:flex; align-items:center; gap:8px; font-size:13px; }
+  .compare-item { flex:1; text-align:center; font-weight:600; padding:6px; background:#fff; border-radius:6px; }
+  .compare-separator { font-size:16px; font-weight:900; color:var(--color-accent); }
+
   /* ─── レスポンシブ ──────────────────────────── */
   @media (max-width: 375px) {
     .tab-content { padding: 12px; }
@@ -3959,6 +3991,258 @@ function JidaibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHist
   );
 }
 
+// 📍 CHECKPOINT: フェーズ12 完了
+
+// ─── ④登録基準別タブ ─────────────────────────────────────
+function KijunbetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHistory, setTestHistory }) {
+  const [view,         setView]         = useState("overview"); // "overview" | "detail" | "quiz"
+  const [selectedId,   setSelectedId]   = useState(null);
+  const [quizzes,      setQuizzes]      = useState([]);
+  const [quizIdx,      setQuizIdx]      = useState(0);
+  const [quizResults,  setQuizResults]  = useState([]);
+  const [showResult,   setShowResult]   = useState(false);
+
+  const prog = globalProgress.kijunbetsu;
+
+  const markDone = (id) => {
+    setGlobalProgress(prev => ({
+      ...prev,
+      kijunbetsu: { ...prev.kijunbetsu, [id]: true }
+    }));
+  };
+
+  // クイズ生成
+  const buildQuizzes = () => {
+    const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+    const allCriteriaIds = criteriaData.map(c => c.id);
+    const quizList = [];
+
+    // Q1〜5: この遺産の登録基準は？（allHeritageDataから出題）
+    const heritagePool = shuffle(allHeritageData.filter(h => h.criteria.length > 0)).slice(0, 5);
+    heritagePool.forEach(h => {
+      const correct = `基準${h.criteria[0]}（${criteriaData.find(c=>c.id===h.criteria[0])?.label||""}）`;
+      const wrongs  = shuffle(allCriteriaIds.filter(id => !h.criteria.includes(id)))
+        .slice(0, 3).map(id => `基準${id}（${criteriaData.find(c=>c.id===id)?.label||""}）`);
+      quizList.push(makeQuiz(
+        `「${h.name}」が持つ登録基準のひとつは？`,
+        correct, wrongs,
+        `${h.name}の登録基準は ${h.criteria.map(c=>`基準${c}`).join("・")}（${h.country}・${h.year}年）。`
+      ));
+    });
+
+    // Q6〜10: この基準に該当する遺産は？
+    const criteriaPool = shuffle(criteriaData).slice(0, 5);
+    criteriaPool.forEach(c => {
+      const correct = c.heritages[0];
+      const wrongs  = shuffle(criteriaData.filter(x=>x.id!==c.id).flatMap(x=>x.heritages)).slice(0,3);
+      quizList.push(makeQuiz(
+        `登録基準${c.id}「${c.label}」に該当する遺産は？`,
+        correct, wrongs,
+        `基準${c.id}は「${c.label}」。${c.type}遺産の基準で、${c.heritages.slice(0,3).join("・")}などが該当。`
+      ));
+    });
+    return shuffle(quizList).slice(0, 10);
+  };
+
+  const startQuiz = () => {
+    setQuizzes(buildQuizzes());
+    setQuizIdx(0); setQuizResults([]); setShowResult(false);
+    setView("quiz");
+  };
+
+  const handleQuizResult = (ok) => {
+    const updated = [...quizResults, ok];
+    setQuizResults(updated);
+    if (updated.length === quizzes.length) {
+      setTestHistory(prev => [...prev, {
+        section: "④登録基準別クイズ",
+        correct: updated.filter(Boolean).length, total: quizzes.length,
+        date: Date.now()
+      }]);
+      setShowResult(true);
+    } else {
+      setTimeout(() => setQuizIdx(i => i + 1), 900);
+    }
+  };
+
+  const score = quizResults.filter(Boolean).length;
+  const pct   = quizzes.length ? Math.round(score / quizzes.length * 100) : 0;
+
+  // ── クイズビュー ──────────────────────────────────────────
+  if (view === "quiz") {
+    return (
+      <div>
+        <div className="heritage-list-header">
+          <button className="heritage-list-back" onClick={() => setView("overview")}>← 基準一覧</button>
+          <div className="heritage-list-title">⭐ 登録基準クイズ</div>
+        </div>
+        <div className="card">
+          {!showResult ? (
+            <>
+              <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:8 }}>
+                問題 {Math.min(quizIdx+1, quizzes.length)} / {quizzes.length}
+              </div>
+              <div className="progress-bar-wrap" style={{ marginBottom:14 }}>
+                <div className="progress-bar-fill" style={{ width:`${(quizIdx/quizzes.length)*100}%` }} />
+              </div>
+              <QuizComponent key={quizIdx} quiz={quizzes[quizIdx]} onResult={handleQuizResult} />
+            </>
+          ) : (
+            <div className="quiz-result-wrap">
+              <div className="quiz-result-score">{score}/{quizzes.length}</div>
+              <div className="quiz-result-label">正解数 ({pct}%)</div>
+              <div className="quiz-result-msg">
+                {pct===100?"🎉 登録基準マスター！":pct>=75?"👏 よくできました！":pct>=50?"📖 もう少し復習を":"💪 繰り返し練習しよう"}
+              </div>
+              <div style={{ marginTop:14, display:"flex", gap:8, justifyContent:"center" }}>
+                <button className="btn btn-primary" onClick={startQuiz}>もう一度</button>
+                <button className="btn btn-ghost" onClick={() => setView("overview")}>一覧に戻る</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── 詳細ビュー ────────────────────────────────────────────
+  if (view === "detail" && selectedId) {
+    const c = criteriaData.find(x => x.id === selectedId);
+    const typeColor = c.type === "文化" ? "rgba(255,143,171,0.12)" : "rgba(181,234,215,0.15)";
+    const relatedHeritages = allHeritageData.filter(h => h.criteria.includes(c.id)).slice(0, 6);
+    return (
+      <div>
+        <div className="heritage-list-header">
+          <button className="heritage-list-back" onClick={() => setView("overview")}>← 基準一覧</button>
+          <div className="heritage-list-title">{c.type}遺産 基準{c.id}</div>
+        </div>
+
+        <div className="criteria-detail-header" style={{ background:typeColor, border:`2px solid ${c.color}` }}>
+          <div className="criteria-detail-num" style={{ color:c.color }}>基準 {c.id}</div>
+          <div className="criteria-detail-label">{c.label}</div>
+          <div className="criteria-detail-desc">{c.description}</div>
+        </div>
+
+        {/* 試験Tips */}
+        <div className="card" style={{ marginBottom:12 }}>
+          <div className="card-title">💡 試験ポイント</div>
+          {c.examTips.map((t, i) => (
+            <div key={i} className="criteria-tip" style={{ marginBottom:6 }}>📌 {t}</div>
+          ))}
+          <div style={{ marginTop:10 }}>
+            <button className="btn btn-ghost" onClick={() => markDone(c.id)}>
+              {prog[c.id] ? "✅ 学習済み" : "✅ 学習済みにする"}
+            </button>
+          </div>
+        </div>
+
+        {/* 比較ポイント */}
+        {c.comparePair && (
+          <div className="card" style={{ marginBottom:12 }}>
+            <div className="card-title">🔍 比較ポイント</div>
+            <div className="compare-box">
+              <div className="compare-box-label">⚡ 同じ基準{c.id}でも…</div>
+              <div className="compare-vs">
+                <div className="compare-item">{c.comparePair.a}</div>
+                <div className="compare-separator">VS</div>
+                <div className="compare-item">{c.comparePair.b}</div>
+              </div>
+            </div>
+            <AIButton type="compare" id={`${c.comparePair.a.split('（')[0]}_${c.comparePair.b.split('（')[0]}`.replace(/\s/g,"")} label={`AI比較解説`} delay={1200} />
+          </div>
+        )}
+
+        {/* データ上の代表遺産 */}
+        <div className="card" style={{ marginBottom:12 }}>
+          <div className="card-title">🏛️ 基準{c.id}を持つ遺産（{relatedHeritages.length}件）</div>
+          <div className="criteria-heritages" style={{ marginBottom:10 }}>
+            {c.heritages.map(h => (
+              <span key={h} className="criteria-heritage-tag">{h}</span>
+            ))}
+          </div>
+          {relatedHeritages.length > 0 && (
+            <div style={{ marginTop:8 }}>
+              <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:8 }}>収録データより</div>
+              {relatedHeritages.map(h => (
+                <div key={h.id} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:"1px solid var(--color-border)", fontSize:13 }}>
+                  <span>{h.countryFlag} {h.name}</span>
+                  <span style={{ fontSize:11, color:"var(--color-text-light)" }}>{h.year}年</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <AIButton type="explanation" id={c.id} label={`基準${c.id}をAI解説`} delay={800} />
+      </div>
+    );
+  }
+
+  // ── 概要ビュー（基準一覧） ─────────────────────────────────
+  const completedCount = Object.values(prog).filter(Boolean).length;
+  return (
+    <div>
+      <div className="section-title">⭐ 登録基準 i〜x</div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+        <div style={{ fontSize:13, color:"var(--color-text-light)" }}>
+          学習済み {completedCount}/10 基準
+        </div>
+        <button className="btn btn-primary" style={{ fontSize:12 }} onClick={startQuiz}>
+          📝 基準クイズ（10問）
+        </button>
+      </div>
+
+      {/* 文化遺産基準 */}
+      <div style={{ fontSize:12, fontWeight:700, color:"#d63873", marginBottom:8 }}>🏛️ 文化遺産の基準（i〜vi）</div>
+      <div className="criteria-overview-grid">
+        {criteriaData.filter(c => c.type === "文化").map(c => (
+          <div key={c.id} className={`criteria-mini-card${prog[c.id]?" done":""}`}
+            style={{ background:`${c.color}20`, border:`2px solid ${prog[c.id]?"#2e8b57":c.color}` }}
+            onClick={() => { setSelectedId(c.id); setView("detail"); }}
+          >
+            {prog[c.id] && <span className="criteria-done-mark">✅</span>}
+            <div className="criteria-mini-num" style={{ color:c.color }}>基準{c.id}</div>
+            <div className="criteria-mini-label">{c.label}</div>
+            <div className="criteria-mini-type">文化遺産 · {c.heritages.length}遺産</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 自然遺産基準 */}
+      <div style={{ fontSize:12, fontWeight:700, color:"#2e8b57", marginBottom:8, marginTop:8 }}>🌿 自然遺産の基準（vii〜x）</div>
+      <div className="criteria-overview-grid">
+        {criteriaData.filter(c => c.type === "自然").map(c => (
+          <div key={c.id} className={`criteria-mini-card${prog[c.id]?" done":""}`}
+            style={{ background:`${c.color}20`, border:`2px solid ${prog[c.id]?"#2e8b57":c.color}` }}
+            onClick={() => { setSelectedId(c.id); setView("detail"); }}
+          >
+            {prog[c.id] && <span className="criteria-done-mark">✅</span>}
+            <div className="criteria-mini-num" style={{ color:"#2e8b57" }}>基準{c.id}</div>
+            <div className="criteria-mini-label">{c.label}</div>
+            <div className="criteria-mini-type">自然遺産 · {c.heritages.length}遺産</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 重要ポイント */}
+      <div className="card" style={{ marginTop:8 }}>
+        <div className="card-title">📌 登録基準の重要ポイント</div>
+        {[
+          "基準ivは最も多くの遺産が持つ基準（建築・技術の傑作）",
+          "基準viの単独登録は例外的（広島・ゴレ島のみ）",
+          "複合遺産は文化基準(i〜vi)と自然基準(vii〜x)の両方を持つ",
+          "ガラパゴスはvii・viii・ix・xの4基準すべてを持つ",
+          "白神山地はixのみで登録（日本の自然遺産で唯一の単基準）",
+        ].map((p, i) => (
+          <div key={i} style={{ padding:"7px 0", borderBottom:"1px solid var(--color-border)", fontSize:13 }}>
+            💡 {p}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PlaceholderTab({ title }) {
   return (
     <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--color-text-light)" }}>
@@ -4031,7 +4315,7 @@ export default function App() {
       case "kisochishiki": return <KisochishikiTab {...tabProps} />;
       case "chiikibetsu":  return <ChiikibetsuTab {...tabProps} />;
       case "jidaibetsu":   return <JidaibetsuTab {...tabProps} />;
-      case "kijunbetsu":   return <PlaceholderTab title="④登録基準別タブ（フェーズ12で実装）" />;
+      case "kijunbetsu":   return <KijunbetsuTab {...tabProps} />;
       case "nigatebun":    return <PlaceholderTab title="⑤苦手分析タブ（フェーズ13で実装）" />;
       default:             return null;
     }
