@@ -6,7 +6,7 @@
 フェーズ2:  データ①(日本遺産)     [✅] 完了
 フェーズ3:  データ②(世界前半)     [✅] 完了
 フェーズ4:  データ③(世界後半)     [✅] 完了
-フェーズ5:  共通コンポーネント    [ ] 未着手
+フェーズ5:  共通コンポーネント    [✅] 完了
 フェーズ6:  ホーム画面            [ ] 未着手
 フェーズ7:  ①基礎知識 前半       [ ] 未着手
 フェーズ8:  ①基礎知識 後半       [ ] 未着手
@@ -18,7 +18,7 @@
 フェーズ14: AI機能統合            [ ] 未着手
 フェーズ15: 仕上げ・結合          [ ] 未着手
 ========================================
-最終更新: フェーズ4完了後
+最終更新: フェーズ5完了後
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -1906,6 +1906,101 @@ const STYLES = `
     display: inline-block;
   }
 
+  /* ─── 遺産カード ────────────────────────────── */
+  .heritage-card {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .heritage-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .heritage-card-img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    background: var(--color-border);
+    display: block;
+  }
+  .heritage-card-body { padding: 12px; }
+  .heritage-card-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .heritage-card-sub  { font-size: 12px; color: var(--color-text-light); margin-bottom: 8px; }
+  .heritage-card-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .badge-diff-1 { background: rgba(181,234,215,0.4); color: #2e8b57; }
+  .badge-diff-2 { background: rgba(255,209,102,0.4); color: #a07800; }
+  .badge-diff-3 { background: rgba(255,143,171,0.3); color: #c0365a; }
+  .badge-freq-high { background: rgba(255,143,171,0.2); color: #c0365a; }
+  .badge-freq-mid  { background: rgba(168,216,234,0.2); color: #2a7fa8; }
+  .badge-freq-low  { background: rgba(201,177,255,0.2); color: #6a4ca8; }
+  .heritage-card-tips { font-size: 11px; color: var(--color-text-light); line-height: 1.5; }
+
+  /* ─── クイズコンポーネント ──────────────────── */
+  .quiz-wrap { padding: 4px 0; }
+  .quiz-question {
+    font-size: 15px; font-weight: 700; line-height: 1.6;
+    margin-bottom: 16px; color: var(--color-text);
+  }
+  .quiz-choices { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-choice-btn {
+    text-align: left; padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--color-border);
+    background: #fff; cursor: pointer;
+    font-family: var(--font-main); font-size: 13px;
+    transition: all 0.18s; line-height: 1.5;
+  }
+  .quiz-choice-btn:hover:not(:disabled) { border-color: var(--color-primary); background: rgba(255,143,171,0.06); }
+  .quiz-choice-btn.correct  { border-color: #2e8b57; background: rgba(181,234,215,0.25); color: #2e8b57; font-weight: 600; }
+  .quiz-choice-btn.wrong    { border-color: #e05c7a; background: rgba(255,143,171,0.15); color: #e05c7a; }
+  .quiz-choice-btn.reveal   { border-color: #2e8b57; background: rgba(181,234,215,0.12); color: #2e8b57; }
+  .quiz-choice-btn:disabled { cursor: default; }
+  .quiz-feedback {
+    margin-top: 14px; padding: 12px 14px;
+    border-radius: var(--radius-sm); font-size: 13px; line-height: 1.6;
+  }
+  .quiz-feedback.correct { background: rgba(181,234,215,0.2); border-left: 3px solid #2e8b57; color: #1e5e3a; }
+  .quiz-feedback.wrong   { background: rgba(255,143,171,0.12); border-left: 3px solid #e05c7a; color: #8a1a35; }
+  .quiz-next-btn {
+    margin-top: 12px; width: 100%; padding: 12px;
+    border-radius: var(--radius-sm); border: none;
+    background: var(--color-primary); color: #fff;
+    font-family: var(--font-main); font-size: 14px; font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ─── YouTubeボタン・AIボタン ────────────────── */
+  .youtube-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 13px; border-radius: var(--radius-sm);
+    border: 1px solid #ff4444; background: rgba(255,68,68,0.08);
+    color: #cc0000; font-family: var(--font-main); font-size: 12px;
+    cursor: pointer; transition: all 0.18s; text-decoration: none;
+  }
+  .youtube-btn:hover { background: #ff4444; color: #fff; }
+
+  .ai-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 13px; border-radius: var(--radius-sm);
+    border: 1px solid var(--color-lavender);
+    background: rgba(201,177,255,0.12);
+    color: #6a4ca8; font-family: var(--font-main); font-size: 12px;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .ai-btn:hover { background: var(--color-lavender); color: #fff; }
+  .ai-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .ai-loading {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px; font-size: 13px; color: var(--color-text-light);
+    margin-top: 8px;
+  }
+  .ai-badge {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    color: #6a4ca8; margin-bottom: 6px;
+  }
+
   /* ─── レスポンシブ ──────────────────────────── */
   @media (max-width: 375px) {
     .tab-content { padding: 12px; }
@@ -1951,6 +2046,207 @@ const TABS = [
   { id: "kijunbetsu",   label: "④基準",     icon: Star },
   { id: "nigatebun",    label: "⑤分析",     icon: BarChart2 },
 ];
+
+// 📍 CHECKPOINT: フェーズ5 完了
+
+// ─── モックAIデータ（GitHub Pages対応・APIキー不要） ────────
+// TODO: 将来的にAnthropic APIを使う場合は getMockAIResponse を以下に差し替え
+// const callClaudeAPI = async (prompt) => {
+//   const response = await fetch("https://api.anthropic.com/v1/messages", {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000,
+//       messages: [{ role: "user", content: prompt }] })
+//   });
+//   const data = await response.json();
+//   return data.content?.[0]?.text || "";
+// };
+// ※ GitHub Pages での利用時はAPIキーが露出するため注意
+const mockAIData = {
+  explanation: {
+    "i":  "登録基準iは「人類の創造的傑作」です。建築・芸術・都市計画において、人間の創造性が頂点に達した作品に与えられます。姫路城は木造城郭建築として、シドニー・オペラハウスは20世紀建築として、それぞれ人類の創造力の証として認められています。",
+    "ii": "登録基準iiは「文化・文明の交流」です。ある時代や地域を超えて、建築・技術・芸術・都市計画などが広まったことを示す遺産に与えられます。奈良の都は中国の都城制度が日本に伝わった証拠として評価されました。",
+    "iii":"登録基準iiiは「文明・文化の証拠」です。現存または消滅した文明・文化の、唯一または希少な証拠となる遺産に与えられます。ポンペイは古代ローマの都市生活をそのまま今に伝える、かけがえない証拠です。",
+    "iv": "登録基準ivは「建築・技術の傑作」です。人類の歴史における重要な時代を代表する建築様式や技術の卓越した例に与えられます。姫路城の木造軍事建築とヴェルサイユの宮廷建築は、まったく異なる文化の傑作として同じ基準で評価されています。",
+    "v":  "登録基準vは「人と環境の関係」です。特定の文化を代表する伝統的な人間の居住地や土地利用の卓越した例に与えられます。白川郷の合掌造り集落は、豪雪地帯という厳しい自然環境に人間が適応した傑作として評価されました。",
+    "vi": "登録基準viは「信仰・芸術・文学との関連」です。顕著な普遍的意義を持つ出来事・信仰・芸術作品と直接に関連する遺産に与えられます。広島の原爆ドームは核兵器廃絶と平和への誓いを象徴し、人類共通の記憶として登録されました。",
+    "vii":"登録基準viiは「自然の美と景観」です。最高の自然美や美的な重要性を持つ卓越した自然現象や地域に与えられます。グランドキャニオンの圧倒的な峡谷景観やヴィクトリアの滝の雄大さが代表例です。",
+    "viii":"登録基準viiiは「地球の歴史・地形」です。地球の歴史の主要な段階を示す卓越した例、または地形・地質学的プロセスを示す遺産に与えられます。ガラパゴスは海底火山からの島の形成過程を今も観察できる生きた地質学の教科書です。",
+    "ix": "登録基準ixは「生態系・生物の進化」です。陸上・淡水・沿岸・海洋生態系の進化や発展において重要な継続中の生態学的プロセスを示す遺産に与えられます。知床は流氷がもたらす海の栄養が陸の生き物まで育む独自の生態系が評価されました。",
+    "x":  "登録基準xは「生物多様性」です。絶滅危惧種を含む生物多様性の保全にとって最も重要な自然生息地に与えられます。小笠原諸島は一度も大陸と地続きになったことがなく、固有種の比率が極めて高い「東洋のガラパゴス」として評価されました。",
+    "default": "この登録基準は、遺産が持つ顕著な普遍的価値を証明する重要な根拠です。世界遺産委員会は毎年、専門機関（ICOMOS・IUCN）の審査をもとに、登録基準への適合を厳密に審査しています。"
+  },
+  story: {
+    "himeji":     "白鷺が翼を広げたような優美な姿から「白鷺城」と呼ばれる姫路城。1609年に完成したその姿は400年以上変わりません。戦国時代の激しい攻防を想定した複雑な縄張り、敵を迷わせる迷路のような城内構造、そして白漆喰の美しい外壁。戦うための城でありながら、これほどまでに美しい建造物を作り上げた先人たちの知恵と技術は、まさに人類の創造的傑作です。",
+    "yakushima":  "屋久島には「ひと月に35日雨が降る」という言葉があります。この豊富な雨が、樹齢数千年の屋久杉を育ててきました。縄文時代から生き続ける縄文杉は推定樹齢2000〜7000年。亜熱帯から亜寒帯まで標高によって植生が垂直に変化するこの島は、一つの島で日本列島全体の自然を体験できる奇跡の場所です。",
+    "hiroshima":  "1945年8月6日午前8時15分、人類初の原子爆弾が広島の空で炸裂しました。爆心地近くにあったこの建物だけが、奇跡的に骨組みを残して立ち続けました。かつては産業奨励館として人々が行き交った場所が、一瞬にして廃墟となった。その姿は核兵器の恐ろしさと、二度と繰り返してはならないという人類の誓いを今に伝えています。",
+    "fuji":       "富士山が世界遺産に登録されたのは「自然遺産」としてではありません。「信仰の対象と芸術の源泉」という文化遺産としての登録です。古来より日本人は富士山を神聖な山として崇め、葛飾北斎は「富嶽三十六景」で世界中の芸術家に影響を与えました。単なる美しい山ではなく、日本人の精神文化そのものを体現した遺産です。",
+    "angkor":     "9世紀から15世紀にかけて東南アジアに君臨したクメール帝国。アンコール・ワットは当初ヒンドゥー教の寺院として建てられ、後に仏教寺院へと変わりました。密林に飲み込まれ忘れられた都市が西洋人によって「発見」されたのは1860年代。しかし地元の人々は何世紀もの間、この場所を聖地として守り続けていたのです。",
+    "machu_picchu":"標高2,430mの山の尾根に突如現れる石造りの都市。インカ帝国が15世紀に建造したマチュ・ピチュは、スペインの征服者たちにすら発見されることなく400年以上密林に眠り続けました。鉄器も車輪も持たないインカの人々が、どうやってこれほど精巧な石組みを実現したのか。その謎は今も完全には解明されていません。",
+    "default":    "この世界遺産は、人類が長い歴史の中で築き上げた、かけがえない文化・自然の遺産です。登録基準に示された顕著な普遍的価値は、国境や時代を超えて、すべての人々が共有すべき宝として世界遺産委員会に認められました。"
+  },
+  compare: {
+    "himeji_versailles":  "姫路城とヴェルサイユ宮殿はどちらも登録基準ivに該当しますが、その価値はまったく異なります。姫路城は17世紀日本の木造軍事建築の最高傑作。敵を迷わせる複雑な縄張りと白漆喰の防火外壁が特徴です。一方ヴェルサイユはフランス絶対王政の権威を示す宮廷建築で、左右対称の整形庭園と豪華絢爛な内装が王の力を視覚的に表現。「建築・技術の傑作」という同じ基準でも、目的と様式は正反対です。",
+    "tajmahal_sydney":    "タージ・マハルとシドニー・オペラハウスはどちらも登録基準i「人類の創造的傑作」です。タージ・マハルは17世紀ムガル帝国の皇帝が亡き妃への愛のために建てた純白の霊廟。シドニー・オペラハウスは20世紀の建築家ヨーン・ウツソンが設計した貝殻のような屋根が特徴の革命的建築。400年の時代差があっても、人類の創造性の頂点として並び称されます。",
+    "hiroshima_auschwitz":"広島の原爆ドームとアウシュビッツ強制収容所はどちらも登録基準vi「負の遺産」です。原爆ドームは1945年8月6日の核爆発を生き延びた建物で核兵器廃絶のシンボル。アウシュビッツはナチス・ドイツによるホロコーストの現場で110万人以上が命を失いました。「二度と繰り返してはならない」という人類共通の誓いを刻んだ場所として、共に登録されています。",
+    "default":            "同じ登録基準に該当する遺産でも、文化的背景・時代・地域によって価値の現れ方はまったく異なります。「なぜ同じ基準なのか」を考えることで、世界遺産の本質的な価値への理解が深まります。登録基準は単なる分類ではなく、その遺産が人類にとって何を意味するかを示す言葉なのです。"
+  },
+  review: {
+    "asia_weak":     "アジアの遺産が苦手なようです。まず日本の26件を完全制覇することを優先しましょう。次に中国の万里の長城・故宮・兵馬俑、インドのタージ・マハルを重点的に。登録基準と登録年をセットで覚えると記憶に定着しやすいですよ。",
+    "europe_weak":   "ヨーロッパの遺産が苦手なようです。建築様式との紐付けが効果的です。ゴシック→ケルン大聖堂、バロック→ヴェルサイユ、ルネサンス→フィレンツェという形でセットで覚えましょう。",
+    "criteria_weak": "登録基準の理解が不足しています。基準i〜xを「文化（i〜vi）」と「自然（vii〜x）」に分けて整理しましょう。特に基準ivは最も多くの遺産に適用される重要基準です。姫路城・ヴェルサイユ・ケルン大聖堂など具体例とセットで覚えると効果的です。",
+    "modern_weak":   "近代・現代の遺産が苦手なようです。産業革命関連（アイアンブリッジ・富岡製糸場・明治産業革命）と負の遺産（原爆ドーム・アウシュビッツ）を重点的に復習しましょう。20世紀の遺産は登録年が比較的新しく、世界史と合わせて学ぶと理解しやすいです。",
+    "default":       "苦手な分野を集中的に復習することで、効率よく得点アップが狙えます。特に間違えた問題の「なぜ間違えたか」を確認することが大切です。登録基準・所在国・登録年の3点セットを意識して復習しましょう。"
+  }
+};
+
+const getMockAIResponse = (type, id) => {
+  const data = mockAIData[type]?.[id];
+  return data || mockAIData[type]?.["default"] || "解説データを準備中です。";
+};
+
+const typewriterEffect = (text, setter, speed = 28) => {
+  let i = 0;
+  setter("");
+  const timer = setInterval(() => {
+    if (i < text.length) { setter(prev => prev + text[i]); i++; }
+    else clearInterval(timer);
+  }, speed);
+};
+
+// ─── 共通コンポーネント ─────────────────────────────────────
+
+function HeritageCard({ heritage, onClick }) {
+  const { name, nameEn, country, countryFlag, year, type, region,
+          difficulty, examFrequency, image, examTips } = heritage;
+
+  const typeClass = type === "文化遺産" ? "badge-culture"
+                  : type === "自然遺産" ? "badge-nature" : "badge-mixed";
+  const diffLabel = difficulty === 1 ? "★ 基本" : difficulty === 2 ? "★★ 標準" : "★★★ 難";
+  const diffClass = `badge badge-diff-${difficulty}`;
+  const freqClass = examFrequency === "高" ? "badge badge-freq-high"
+                  : examFrequency === "中" ? "badge badge-freq-mid" : "badge badge-freq-low";
+
+  return (
+    <div className="heritage-card" onClick={() => onClick && onClick(heritage)}>
+      {image && (
+        <img
+          className="heritage-card-img"
+          src={image}
+          alt={name}
+          loading="lazy"
+          onError={e => { e.target.style.display = "none"; }}
+        />
+      )}
+      <div className="heritage-card-body">
+        <div className="heritage-card-name">{countryFlag} {name}</div>
+        <div className="heritage-card-sub">{nameEn} · {country} · {year}年登録</div>
+        <div className="heritage-card-badges">
+          <span className={`badge ${typeClass}`}>{type}</span>
+          <span className={diffClass}>{diffLabel}</span>
+          <span className={freqClass}>出題:{examFrequency}</span>
+        </div>
+        {examTips && examTips.length > 0 && (
+          <div className="heritage-card-tips">💡 {examTips[0]}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function QuizComponent({ quiz, onResult }) {
+  const [selected, setSelected] = useState(null);
+  const [answered, setAnswered] = useState(false);
+
+  const handleChoice = (idx) => {
+    if (answered) return;
+    setSelected(idx);
+    setAnswered(true);
+    const isCorrect = idx === quiz.correctIndex;
+    if (onResult) onResult(isCorrect);
+  };
+
+  return (
+    <div className="quiz-wrap">
+      <div className="quiz-question">{quiz.question}</div>
+      <div className="quiz-choices">
+        {quiz.choices.map((choice, idx) => {
+          let cls = "quiz-choice-btn";
+          if (answered) {
+            if (idx === quiz.correctIndex) cls += " correct";
+            else if (idx === selected)      cls += " wrong";
+          }
+          return (
+            <button
+              key={idx}
+              className={cls}
+              onClick={() => handleChoice(idx)}
+              disabled={answered}
+            >
+              {String.fromCharCode(65 + idx)}. {choice}
+            </button>
+          );
+        })}
+      </div>
+      {answered && (
+        <div className={`quiz-feedback ${selected === quiz.correctIndex ? "correct" : "wrong"}`}>
+          {selected === quiz.correctIndex ? "✅ 正解！" : "❌ 不正解"}{" "}
+          {quiz.explanation}
+        </div>
+      )}
+      {answered && onResult === undefined && (
+        <button className="quiz-next-btn" onClick={() => { setSelected(null); setAnswered(false); }}>
+          もう一度
+        </button>
+      )}
+    </div>
+  );
+}
+
+function YouTubeButton({ query }) {
+  const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+  return (
+    <a className="youtube-btn" href={url} target="_blank" rel="noopener noreferrer">
+      ▶ YouTube
+    </a>
+  );
+}
+
+function AIButton({ type, id, label = "AI解説", delay = 800 }) {
+  const [loading, setLoading] = useState(false);
+  const [aiText, setAiText]   = useState("");
+
+  const handleClick = () => {
+    if (loading) return;
+    setLoading(true);
+    setAiText("");
+    setTimeout(() => {
+      const text = getMockAIResponse(type, id);
+      setLoading(false);
+      typewriterEffect(text, setAiText);
+    }, delay);
+  };
+
+  return (
+    <div>
+      <button className="ai-btn" onClick={handleClick} disabled={loading}>
+        🤖 {label}
+      </button>
+      {loading && (
+        <div className="ai-loading">
+          <span className="spinner" />
+          <span>AI解説を生成中...</span>
+        </div>
+      )}
+      {aiText && !loading && (
+        <div className="ai-response">
+          <div className="ai-badge">🤖 AI解説</div>
+          <p>{aiText}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── プレースホルダータブ（後フェーズで実装） ──────────────
 function PlaceholderTab({ title }) {
