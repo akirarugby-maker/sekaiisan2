@@ -14,11 +14,11 @@
 フェーズ10: ②地域別 後半         [✅] 完了
 フェーズ11: ③時代別              [✅] 完了
 フェーズ12: ④登録基準別          [✅] 完了
-フェーズ13: ⑤苦手分析            [ ] 未着手
+フェーズ13: ⑤苦手分析            [✅] 完了
 フェーズ14: AI機能統合            [ ] 未着手
 フェーズ15: 仕上げ・結合          [ ] 未着手
 ========================================
-最終更新: フェーズ12完了後
+最終更新: フェーズ13完了後
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -2311,6 +2311,49 @@ const STYLES = `
   .compare-item { flex:1; text-align:center; font-weight:600; padding:6px; background:#fff; border-radius:6px; }
   .compare-separator { font-size:16px; font-weight:900; color:var(--color-accent); }
 
+  /* ─── 苦手分析タブ ──────────────────────────── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .stat-card {
+    border-radius: var(--radius-md); padding: 14px 10px; text-align: center;
+    background: var(--color-card-bg); border: 1px solid var(--color-border);
+  }
+  .stat-num   { font-size: 26px; font-weight: 700; color: var(--color-primary); }
+  .stat-label { font-size: 11px; color: var(--color-text-light); margin-top: 2px; }
+
+  .bar-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .bar-row:last-child { border-bottom: none; }
+  .bar-label { font-size: 12px; width: 120px; flex-shrink: 0; line-height: 1.3; }
+  .bar-track { flex: 1; height: 10px; background: var(--color-border); border-radius: 5px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+  .bar-pct   { font-size: 12px; font-weight: 700; width: 36px; text-align: right; flex-shrink: 0; }
+
+  .weak-rank-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--color-border);
+  }
+  .weak-rank-num { font-size: 18px; font-weight: 900; width: 28px; flex-shrink: 0; }
+  .weak-rank-body { flex: 1; }
+  .weak-rank-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .weak-rank-sub  { font-size: 11px; color: var(--color-text-light); }
+  .weak-rank-pct  { font-size: 14px; font-weight: 700; }
+
+  .forgetting-row {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-top: 10px;
+    scrollbar-width: none;
+  }
+  .forgetting-row::-webkit-scrollbar { display: none; }
+  .forget-card {
+    flex-shrink: 0; width: 80px; text-align: center;
+    padding: 10px 8px; border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border); background: var(--color-card-bg);
+    font-size: 11px;
+  }
+  .forget-day  { font-size: 16px; font-weight: 700; color: var(--color-primary); }
+  .forget-rate { font-size: 10px; color: var(--color-text-light); margin-top: 2px; }
+
   /* ─── レスポンシブ ──────────────────────────── */
   @media (max-width: 375px) {
     .tab-content { padding: 12px; }
@@ -4243,6 +4286,210 @@ function KijunbetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHist
   );
 }
 
+// 📍 CHECKPOINT: フェーズ13 完了
+
+// ─── ⑤苦手分析タブ ─────────────────────────────────────────
+function NigatebunTab({ globalProgress, setGlobalProgress, testHistory }) {
+
+  // ── 統計計算 ─────────────────────────────────────────────
+  const totalQ     = testHistory.reduce((s, h) => s + h.total, 0);
+  const totalC     = testHistory.reduce((s, h) => s + h.correct, 0);
+  const overallPct = totalQ > 0 ? Math.round(totalC / totalQ * 100) : 0;
+
+  // セクション別正答率
+  const sectionStats = {};
+  testHistory.forEach(h => {
+    if (!sectionStats[h.section]) sectionStats[h.section] = { correct:0, total:0, lastDate:0 };
+    sectionStats[h.section].correct  += h.correct;
+    sectionStats[h.section].total    += h.total;
+    sectionStats[h.section].lastDate  = Math.max(sectionStats[h.section].lastDate, h.date);
+  });
+
+  const sectionList = Object.entries(sectionStats).map(([section, s]) => ({
+    section,
+    pct:      Math.round(s.correct / s.total * 100),
+    correct:  s.correct,
+    total:    s.total,
+    lastDate: s.lastDate,
+  })).sort((a, b) => a.pct - b.pct);
+
+  // 弱点カテゴリ判定（AI復習提案のキー）
+  const detectWeakArea = () => {
+    if (sectionList.length === 0) return "default";
+    const worst = sectionList[0].section;
+    if (worst.includes("地域") && worst.includes("アジア")) return "asia_weak";
+    if (worst.includes("地域") && worst.includes("ヨーロッパ")) return "europe_weak";
+    if (worst.includes("登録基準") || worst.includes("基準")) return "criteria_weak";
+    if (worst.includes("近代") || worst.includes("現代")) return "modern_weak";
+    return "default";
+  };
+
+  const markAnalyzed = () => {
+    setGlobalProgress(prev => ({
+      ...prev,
+      nigatebun: { analyzed: true }
+    }));
+  };
+
+  // バーの色（正答率に応じて）
+  const barColor = (pct) =>
+    pct >= 80 ? "#2e8b57" : pct >= 60 ? "#FFD166" : pct >= 40 ? "#FF8FAB" : "#dc2626";
+
+  // 忘却曲線タイミング
+  const forgettingCurve = [
+    { day:"翌日",   pct:"79%", tip:"1日後に復習で定着率2倍" },
+    { day:"3日後",  pct:"58%", tip:"3日後に再確認" },
+    { day:"1週後",  pct:"44%", tip:"1週間後が第3の復習タイミング" },
+    { day:"1ヶ月",  pct:"21%", tip:"1ヶ月後で長期記憶に定着" },
+    { day:"半年後", pct:"10%", tip:"試験2週間前に最終復習" },
+  ];
+
+  // ── データなし表示 ────────────────────────────────────────
+  if (testHistory.length === 0) {
+    return (
+      <div>
+        <div className="section-title">📊 苦手分析</div>
+        <div style={{ textAlign:"center", padding:"48px 16px" }}>
+          <div style={{ fontSize:48, marginBottom:12 }}>📝</div>
+          <div style={{ fontSize:16, fontWeight:700, marginBottom:8 }}>まだ学習データがありません</div>
+          <div style={{ fontSize:13, color:"var(--color-text-light)", marginBottom:20 }}>
+            各タブでクイズに挑戦すると、ここに分析結果が表示されます。
+          </div>
+          <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+            <div style={{ fontSize:13, background:"rgba(255,143,171,0.1)", padding:"8px 14px", borderRadius:"20px" }}>①基礎知識でクイズ</div>
+            <div style={{ fontSize:13, background:"rgba(168,216,234,0.1)", padding:"8px 14px", borderRadius:"20px" }}>②地域別でクイズ</div>
+            <div style={{ fontSize:13, background:"rgba(181,234,215,0.1)", padding:"8px 14px", borderRadius:"20px" }}>③時代別でクイズ</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="section-title">📊 苦手分析ダッシュボード</div>
+
+      {/* 総合スタッツ */}
+      <div className="stat-grid">
+        <div className="stat-card">
+          <div className="stat-num">{testHistory.length}</div>
+          <div className="stat-label">テスト回数</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-num">{totalQ}</div>
+          <div className="stat-label">総問題数</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-num" style={{ color: barColor(overallPct) }}>{overallPct}%</div>
+          <div className="stat-label">総合正答率</div>
+        </div>
+      </div>
+
+      {/* 総合進捗バー */}
+      <div className="card" style={{ marginBottom:14 }}>
+        <div className="card-title">📈 セクション別正答率</div>
+        {sectionList.map(s => (
+          <div key={s.section} className="bar-row">
+            <div className="bar-label">{s.section.replace("①基礎知識 ","").replace("②地域別 ","").replace("③時代別 ","").replace("④登録基準別","④基準")}</div>
+            <div className="bar-track">
+              <div className="bar-fill" style={{ width:`${s.pct}%`, background: barColor(s.pct) }} />
+            </div>
+            <div className="bar-pct" style={{ color: barColor(s.pct) }}>{s.pct}%</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 弱点ランキング */}
+      {sectionList.length > 0 && (
+        <div className="card" style={{ marginBottom:14 }}>
+          <div className="card-title">🎯 弱点ランキング（要復習）</div>
+          {sectionList.slice(0, 5).map((s, i) => {
+            const daysSince = Math.floor((Date.now() - s.lastDate) / 86400000);
+            const needReview = daysSince >= (i === 0 ? 1 : i === 1 ? 3 : 7);
+            return (
+              <div key={s.section} className="weak-rank-item">
+                <div className="weak-rank-num" style={{ color: i===0?"#dc2626":i===1?"#f59e0b":"#888" }}>
+                  {i+1}位
+                </div>
+                <div className="weak-rank-body">
+                  <div className="weak-rank-name">{s.section}</div>
+                  <div className="weak-rank-sub">
+                    {s.correct}/{s.total}問正解 · {daysSince === 0 ? "今日" : `${daysSince}日前`}学習
+                    {needReview && <span style={{ color:"#dc2626", marginLeft:6 }}>⚠️ 復習推奨</span>}
+                  </div>
+                </div>
+                <div className="weak-rank-pct" style={{ color: barColor(s.pct) }}>{s.pct}%</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* AI復習提案 */}
+      <div className="card" style={{ marginBottom:14 }}>
+        <div className="card-title">🤖 AI復習提案</div>
+        <div style={{ fontSize:13, color:"var(--color-text-light)", marginBottom:10 }}>
+          あなたの学習データをもとに、AIが復習方法をアドバイスします。
+        </div>
+        <AIButton
+          type="review"
+          id={detectWeakArea()}
+          label="AI復習提案を見る"
+          delay={1500}
+        />
+        <div style={{ marginTop:12 }}>
+          <button className="btn btn-ghost" style={{ fontSize:12 }} onClick={markAnalyzed}>
+            ✅ 分析完了（進捗に記録）
+          </button>
+        </div>
+      </div>
+
+      {/* 忘却曲線 */}
+      <div className="card" style={{ marginBottom:14 }}>
+        <div className="card-title">🧠 忘却曲線（エビングハウス）</div>
+        <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:4 }}>
+          復習しないと記憶はどんどん失われます。
+        </div>
+        <div className="forgetting-row">
+          {forgettingCurve.map(f => (
+            <div key={f.day} className="forget-card">
+              <div className="forget-day">{f.day}</div>
+              <div className="forget-rate">残存{f.pct}</div>
+              <div style={{ fontSize:9, color:"var(--color-text-light)", marginTop:4, lineHeight:1.3 }}>{f.tip}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize:12, color:"var(--color-text-light)", marginTop:10, lineHeight:1.6 }}>
+          💡 <strong>復習のタイミング</strong>：翌日・3日後・1週間後・1ヶ月後の4回が効果的。
+          各タブで定期的にクイズに挑戦しましょう。
+        </div>
+      </div>
+
+      {/* 最近の履歴 */}
+      <div className="card">
+        <div className="card-title">📋 最近の学習履歴（全{testHistory.length}件）</div>
+        {[...testHistory].reverse().slice(0, 10).map((h, i) => {
+          const p = Math.round(h.correct/h.total*100);
+          return (
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid var(--color-border)", fontSize:13 }}>
+              <div>
+                <div style={{ fontWeight:600, fontSize:12 }}>{h.section}</div>
+                <div style={{ fontSize:11, color:"var(--color-text-light)" }}>
+                  {new Date(h.date).toLocaleDateString("ja-JP")}
+                </div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontWeight:700, color: barColor(p) }}>{h.correct}/{h.total}問</div>
+                <div style={{ fontSize:11, color: barColor(p) }}>{p}%</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function PlaceholderTab({ title }) {
   return (
     <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--color-text-light)" }}>
@@ -4316,7 +4563,7 @@ export default function App() {
       case "chiikibetsu":  return <ChiikibetsuTab {...tabProps} />;
       case "jidaibetsu":   return <JidaibetsuTab {...tabProps} />;
       case "kijunbetsu":   return <KijunbetsuTab {...tabProps} />;
-      case "nigatebun":    return <PlaceholderTab title="⑤苦手分析タブ（フェーズ13で実装）" />;
+      case "nigatebun":    return <NigatebunTab {...tabProps} />;
       default:             return null;
     }
   };
