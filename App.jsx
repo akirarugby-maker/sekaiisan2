@@ -8,7 +8,7 @@
 フェーズ4:  データ③(世界後半)     [✅] 完了
 フェーズ5:  共通コンポーネント    [✅] 完了
 フェーズ6:  ホーム画面            [✅] 完了
-フェーズ7:  ①基礎知識 前半       [ ] 未着手
+フェーズ7:  ①基礎知識 前半       [✅] 完了
 フェーズ8:  ①基礎知識 後半       [ ] 未着手
 フェーズ9:  ②地域別 前半         [ ] 未着手
 フェーズ10: ②地域別 後半         [ ] 未着手
@@ -18,7 +18,7 @@
 フェーズ14: AI機能統合            [ ] 未着手
 フェーズ15: 仕上げ・結合          [ ] 未着手
 ========================================
-最終更新: フェーズ6完了後
+最終更新: フェーズ7完了後
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -2107,6 +2107,66 @@ const STYLES = `
   }
   .reset-btn:hover { background: #dc2626; color: #fff; }
 
+  /* ─── セクションタブ（基礎知識タブ内） ─────── */
+  .section-tabs {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .section-tab-btn {
+    padding: 7px 14px; border-radius: 20px; border: 2px solid var(--color-border);
+    background: var(--color-card-bg); color: var(--color-text-light);
+    font-family: var(--font-main); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .section-tab-btn.active {
+    background: var(--color-primary); color: #fff; border-color: var(--color-primary);
+  }
+  .section-tab-btn.done {
+    border-color: #2e8b57; color: #2e8b57; background: rgba(181,234,215,0.2);
+  }
+
+  /* ─── クイズ結果サマリー ──────────────────── */
+  .quiz-result-wrap {
+    text-align: center; padding: 24px 16px;
+    background: linear-gradient(135deg, rgba(255,143,171,0.08), rgba(201,177,255,0.08));
+    border-radius: var(--radius-md); margin: 12px 0;
+  }
+  .quiz-result-score { font-size: 48px; font-weight: 700; color: var(--color-primary); }
+  .quiz-result-label { font-size: 14px; color: var(--color-text-light); margin-top: 4px; }
+  .quiz-result-msg   { font-size: 15px; font-weight: 600; margin-top: 12px; }
+
+  /* ─── 登録基準カード ──────────────────────── */
+  .criteria-card {
+    border-radius: var(--radius-md); overflow: hidden;
+    border: 1px solid var(--color-border); margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .criteria-card-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .criteria-card-header:hover { filter: brightness(0.97); }
+  .criteria-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .criteria-card-title { font-size: 14px; font-weight: 700; flex: 1; }
+  .criteria-card-type  { font-size: 11px; opacity: 0.75; }
+  .criteria-chevron    { font-size: 12px; color: var(--color-text-light); }
+  .criteria-card-body  { padding: 14px; background: #fff; border-top: 1px solid var(--color-border); }
+  .criteria-desc       { font-size: 13px; line-height: 1.7; margin-bottom: 10px; }
+  .criteria-heritages  { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+  .criteria-heritage-tag {
+    font-size: 11px; padding: 3px 8px; border-radius: 12px;
+    background: rgba(168,216,234,0.25); color: var(--color-text);
+  }
+  .criteria-tip {
+    font-size: 12px; color: #6a4ca8;
+    background: rgba(201,177,255,0.12); border-radius: var(--radius-sm);
+    padding: 8px 10px; margin-bottom: 8px; line-height: 1.5;
+  }
+
   /* ─── レスポンシブ ──────────────────────────── */
   @media (max-width: 375px) {
     .tab-content { padding: 12px; }
@@ -2602,6 +2662,241 @@ function HomeTab({ onNavigate, globalProgress, setGlobalProgress, examDate, setE
   );
 }
 
+// 📍 CHECKPOINT: フェーズ7 完了
+
+// ─── セクションAクイズデータ（UNESCO基礎知識） ──────────────
+const sectionAQuizzes = [
+  { question: "世界遺産条約が採択されたのは何年？",
+    choices: ["1960年", "1972年", "1975年", "1985年"], correctIndex: 1,
+    explanation: "1972年にユネスコ総会（パリ）で採択。発効は1975年。「世界の文化遺産及び自然遺産の保護に関する条約」が正式名称。" },
+  { question: "世界遺産委員会の委員国数は？",
+    choices: ["15カ国", "18カ国", "21カ国", "25カ国"], correctIndex: 2,
+    explanation: "21カ国で構成。世界遺産条約締約国の中から選出され、任期は4年（または6年）。" },
+  { question: "文化遺産の審査を行う専門機関は？",
+    choices: ["IUCN", "ICOMOS", "ICCROM", "UNESCO"], correctIndex: 1,
+    explanation: "ICOMOS（国際記念物遺跡会議）が文化遺産を担当。自然遺産はIUCN（国際自然保護連合）が担当。" },
+  { question: "世界遺産の総件数は？（2024年時点）",
+    choices: ["900件", "1061件", "1199件", "1350件"], correctIndex: 2,
+    explanation: "2024年現在1199件（文化遺産933件・自然遺産227件・複合遺産39件）。" },
+  { question: "「顕著な普遍的価値」を英語で何という？",
+    choices: ["OUV", "WHC", "UNESCO", "WHI"], correctIndex: 0,
+    explanation: "Outstanding Universal Value（OUV）。世界遺産登録の核心となる概念。" },
+  { question: "日本の世界遺産の件数は？（2024年時点）",
+    choices: ["20件", "23件", "25件", "26件"], correctIndex: 3,
+    explanation: "2024年現在26件（文化遺産21件・自然遺産5件）。" },
+  { question: "危機遺産リストに登録される遺産とは？",
+    choices: ["登録取消が決定した遺産", "保護が脅かされている遺産", "未来の世界遺産候補", "修復が完了した遺産"], correctIndex: 1,
+    explanation: "「危機にさらされている世界遺産リスト（危機遺産リスト）」は、保護・保全が危機にある遺産を掲載。" },
+  { question: "世界遺産から初めて登録取消された遺産は？",
+    choices: ["バーミヤン渓谷", "ドレスデン・エルベ渓谷", "アラビアオリックス保護区", "リヴァプール港"], correctIndex: 2,
+    explanation: "アラビアオリックス保護区（オマーン）が2007年に初の登録取消。保護区の大幅縮小が理由。" },
+];
+
+// ─── ①基礎知識タブ ─────────────────────────────────────────
+function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHistory, setTestHistory }) {
+  const [section, setSection] = useState("A");
+  // Section A state
+  const [quizIdx, setQuizIdx]       = useState(0);
+  const [quizResults, setQuizResults] = useState([]);
+  const [showResult, setShowResult] = useState(false);
+  // Section B state
+  const [openCriteria, setOpenCriteria] = useState(null);
+
+  const prog = globalProgress.kisochishiki;
+
+  const markDone = (key) => {
+    setGlobalProgress(prev => ({
+      ...prev,
+      kisochishiki: { ...prev.kisochishiki, [key]: true }
+    }));
+  };
+
+  // ── Section A: UNESCO基礎知識 ─────────────────────────────
+  const handleQuizResult = (isCorrect) => {
+    const updated = [...quizResults, isCorrect];
+    setQuizResults(updated);
+    if (updated.length === sectionAQuizzes.length) {
+      const correct = updated.filter(Boolean).length;
+      setTestHistory(prev => [...prev, {
+        section: "①基礎知識 A：UNESCO基礎",
+        correct, total: sectionAQuizzes.length,
+        date: Date.now()
+      }]);
+      markDone("A");
+      setShowResult(true);
+    } else {
+      setTimeout(() => setQuizIdx(i => i + 1), 900);
+    }
+  };
+
+  const resetSectionA = () => {
+    setQuizIdx(0); setQuizResults([]); setShowResult(false);
+  };
+
+  const scoreA = quizResults.filter(Boolean).length;
+  const pctA   = sectionAQuizzes.length ? Math.round(scoreA / sectionAQuizzes.length * 100) : 0;
+
+  const resultMsg = pctA === 100 ? "🎉 満点！完璧です！"
+                  : pctA >= 75  ? "👏 よくできました！"
+                  : pctA >= 50  ? "📖 もう少し復習しましょう"
+                                : "💪 繰り返し学習が大切です";
+
+  const renderSectionA = () => (
+    <div>
+      <div className="section-title">🏛️ セクションA：UNESCO・世界遺産条約の基礎</div>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 12, color: "var(--color-text-light)", marginBottom: 8 }}>
+          世界遺産検定2級で必須の基礎知識を確認します。全{sectionAQuizzes.length}問
+        </div>
+        {!showResult ? (
+          <>
+            <div style={{ fontSize: 12, color: "var(--color-text-light)", marginBottom: 12 }}>
+              問題 {Math.min(quizIdx + 1, sectionAQuizzes.length)} / {sectionAQuizzes.length}
+              &nbsp;·&nbsp;正解 {quizResults.filter(Boolean).length}問
+            </div>
+            <div className="progress-bar-wrap" style={{ marginBottom: 16 }}>
+              <div className="progress-bar-fill" style={{ width: `${(quizIdx / sectionAQuizzes.length) * 100}%` }} />
+            </div>
+            <QuizComponent
+              key={quizIdx}
+              quiz={sectionAQuizzes[quizIdx]}
+              onResult={handleQuizResult}
+            />
+          </>
+        ) : (
+          <div className="quiz-result-wrap">
+            <div className="quiz-result-score">{scoreA}/{sectionAQuizzes.length}</div>
+            <div className="quiz-result-label">正解数 ({pctA}%)</div>
+            <div className="quiz-result-msg">{resultMsg}</div>
+            <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
+              <button className="btn btn-primary" onClick={resetSectionA}>もう一度</button>
+              <button className="btn btn-ghost" onClick={() => setSection("B")}>次のセクションへ →</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 重要数字まとめ */}
+      <div className="card">
+        <div className="card-title">📊 重要数字まとめ</div>
+        {[
+          ["条約採択", "1972年（パリ）"],
+          ["条約発効", "1975年"],
+          ["世界遺産総数", "1199件（2024年）"],
+          ["文化遺産",     "933件"],
+          ["自然遺産",     "227件"],
+          ["複合遺産",     "39件"],
+          ["委員国数",     "21カ国"],
+          ["日本の件数",   "26件（文化21・自然5）"],
+          ["初の取消",     "2007年アラビアオリックス保護区"],
+        ].map(([k, v]) => (
+          <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--color-border)", fontSize: 13 }}>
+            <span style={{ color: "var(--color-text-light)" }}>{k}</span>
+            <span style={{ fontWeight: 700 }}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ── Section B: 登録基準 i〜x ────────────────────────────
+  const handleCriteriaView = (id) => {
+    setOpenCriteria(prev => prev === id ? null : id);
+    const viewed = criteriaData.filter(c => c.id !== id || openCriteria !== c.id).length;
+    if (criteriaData.every(c => c.id === id || openCriteria === c.id)) markDone("B");
+  };
+
+  const renderSectionB = () => (
+    <div>
+      <div className="section-title">⭐ セクションB：登録基準 i〜x</div>
+      <div className="card" style={{ marginBottom: 12, fontSize: 13, lineHeight: 1.6 }}>
+        登録基準は<strong>i〜vi が文化遺産</strong>、<strong>vii〜x が自然遺産</strong>。
+        複合遺産は両方の基準を持ちます。各カードをタップして詳細を確認しましょう。
+        <div style={{ marginTop: 8 }}>
+          <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={() => markDone("B")}>
+            ✅ このセクション完了
+          </button>
+        </div>
+      </div>
+
+      {criteriaData.map(c => {
+        const isOpen = openCriteria === c.id;
+        const bgColor = c.type === "文化" ? "rgba(255,143,171,0.08)" : "rgba(181,234,215,0.12)";
+        const numColor = c.color;
+        return (
+          <div key={c.id} className="criteria-card">
+            <div
+              className="criteria-card-header"
+              style={{ background: bgColor }}
+              onClick={() => handleCriteriaView(c.id)}
+            >
+              <div className="criteria-num" style={{ background: numColor }}>{c.id}</div>
+              <div style={{ flex: 1 }}>
+                <div className="criteria-card-title">{c.label}</div>
+                <div className="criteria-card-type">{c.type}遺産基準</div>
+              </div>
+              <div className="criteria-chevron">{isOpen ? "▲" : "▼"}</div>
+            </div>
+            {isOpen && (
+              <div className="criteria-card-body">
+                <div className="criteria-desc">{c.description}</div>
+                {c.examTips && c.examTips.map((t, i) => (
+                  <div key={i} className="criteria-tip">💡 {t}</div>
+                ))}
+                <div style={{ marginBottom: 6, fontSize: 12, fontWeight: 600, color: "var(--color-text-light)" }}>代表的な遺産</div>
+                <div className="criteria-heritages">
+                  {c.heritages.map(h => (
+                    <span key={h} className="criteria-heritage-tag">{h}</span>
+                  ))}
+                </div>
+                {c.comparePair && (
+                  <div style={{ fontSize: 12, background: "rgba(255,209,102,0.15)", padding: "8px 10px", borderRadius: "6px", marginBottom: 10 }}>
+                    🔍 比較ポイント：<strong>{c.comparePair.a}</strong> vs <strong>{c.comparePair.b}</strong>
+                  </div>
+                )}
+                <AIButton type="explanation" id={c.id} label={`基準${c.id}をAI解説`} delay={700} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const sections = [
+    { id: "A", label: "A：UNESCO基礎", done: prog.A },
+    { id: "B", label: "B：登録基準",   done: prog.B },
+    { id: "C", label: "C：分類",       done: prog.C },
+    { id: "D", label: "D：危機遺産",   done: prog.D },
+    { id: "E", label: "E：建築様式",   done: prog.E },
+  ];
+
+  return (
+    <div>
+      <div style={{ marginBottom: 4, fontSize: 12, color: "var(--color-text-light)" }}>
+        完了: {Object.values(prog).filter(Boolean).length} / {Object.values(prog).length} セクション
+      </div>
+      <div className="section-tabs">
+        {sections.map(s => (
+          <button
+            key={s.id}
+            className={`section-tab-btn${section === s.id ? " active" : s.done ? " done" : ""}`}
+            onClick={() => setSection(s.id)}
+          >
+            {s.done && section !== s.id ? "✅ " : ""}{s.label}
+          </button>
+        ))}
+      </div>
+
+      {section === "A" && renderSectionA()}
+      {section === "B" && renderSectionB()}
+      {(section === "C" || section === "D" || section === "E") && (
+        <PlaceholderTab title={`セクション${section}（フェーズ8で実装）`} />
+      )}
+    </div>
+  );
+}
+
 // ─── プレースホルダータブ（後フェーズで実装） ──────────────
 function PlaceholderTab({ title }) {
   return (
@@ -2672,7 +2967,7 @@ export default function App() {
   const renderTab = () => {
     switch (activeTab) {
       case "home":         return <HomeTab {...tabProps} />;
-      case "kisochishiki": return <PlaceholderTab title="①基礎知識タブ（フェーズ7・8で実装）" />;
+      case "kisochishiki": return <KisochishikiTab {...tabProps} />;
       case "chiikibetsu":  return <PlaceholderTab title="②地域別タブ（フェーズ9・10で実装）" />;
       case "jidaibetsu":   return <PlaceholderTab title="③時代別タブ（フェーズ11で実装）" />;
       case "kijunbetsu":   return <PlaceholderTab title="④登録基準別タブ（フェーズ12で実装）" />;
