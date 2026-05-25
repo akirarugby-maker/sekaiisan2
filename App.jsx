@@ -16,9 +16,9 @@
 フェーズ12: ④登録基準別          [✅] 完了
 フェーズ13: ⑤苦手分析            [✅] 完了
 フェーズ14: AI機能統合            [✅] 完了
-フェーズ15: 仕上げ・結合          [ ] 未着手
+フェーズ15: 仕上げ・結合          [✅] 完了
 ========================================
-最終更新: フェーズ14完了後
+最終更新: フェーズ15完了（全フェーズ完了）
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -2354,10 +2354,62 @@ const STYLES = `
   .forget-day  { font-size: 16px; font-weight: 700; color: var(--color-primary); }
   .forget-rate { font-size: 10px; color: var(--color-text-light); margin-top: 2px; }
 
-  /* ─── レスポンシブ ──────────────────────────── */
+  /* ─── 模擬試験 ──────────────────────────────── */
+  .exam-screen {
+    position: fixed; inset: 0; background: #fff; z-index: 300;
+    display: flex; flex-direction: column; max-width: 768px;
+    margin: 0 auto;
+  }
+  .exam-header {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-lavender));
+    color: #fff; padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+  }
+  .exam-timer {
+    font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .exam-timer.warning { color: #FFD166; }
+  .exam-timer.danger  { color: #ff6b6b; animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  .exam-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .exam-intro {
+    text-align: center; padding: 40px 20px; max-width: 480px; margin: 0 auto;
+  }
+  .exam-intro-title { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+  .exam-intro-sub   { font-size: 14px; color: var(--color-text-light); margin-bottom: 24px; line-height: 1.6; }
+  .exam-start-btn {
+    width: 100%; padding: 16px; border-radius: var(--radius-md); border: none;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-lavender));
+    color: #fff; font-family: var(--font-main); font-size: 18px; font-weight: 700;
+    cursor: pointer; margin-bottom: 12px;
+  }
+  .exam-result-grade {
+    font-size: 64px; font-weight: 900; margin-bottom: 8px;
+  }
+  .exam-pass  { color: #2e8b57; }
+  .exam-fail  { color: #dc2626; }
+
+  /* ─── ナビゲーションバー改善 ────────────────── */
+  .nav-bar-title {
+    font-size: 13px; font-weight: 700; color: var(--color-text);
+    padding: 4px 0; margin-right: 4px; white-space: nowrap;
+  }
+
+  /* ─── レスポンシブ（最終調整） ─────────────── */
+  @media (max-width: 390px) {
+    .region-grid     { grid-template-columns: 1fr 1fr; }
+    .criteria-overview-grid { grid-template-columns: 1fr 1fr; }
+    .mode-grid       { grid-template-columns: 1fr 1fr; }
+    .stat-grid       { grid-template-columns: 1fr 1fr 1fr; }
+    .tab-content     { padding: 12px 10px; }
+  }
   @media (max-width: 375px) {
-    .tab-content { padding: 12px; }
+    .tab-content { padding: 12px 8px; }
     .tab-bar-btn { font-size: 9px; min-width: 44px; }
+    .modal-panel { padding: 14px; }
+    .heritage-card-img { height: 110px; }
+    .exam-intro-title { font-size: 20px; }
   }
 `;
 
@@ -2623,6 +2675,7 @@ function HomeTab({ onNavigate, globalProgress, setGlobalProgress, examDate, setE
   const [results, setResults]       = useState([]);
   const [selected, setSelected]     = useState(null);
   const [showReset, setShowReset]   = useState(false);
+  const [showExam, setShowExam]     = useState(false);
 
   // ── 検索 ──────────────────────────────────────────────────
   useEffect(() => {
@@ -2830,7 +2883,22 @@ function HomeTab({ onNavigate, globalProgress, setGlobalProgress, examDate, setE
             </button>
           ))}
         </div>
+        <button
+          className="btn btn-primary"
+          style={{ width: "100%", marginTop: 12, justifyContent: "center", fontSize: 15, padding: "14px" }}
+          onClick={() => setShowExam(true)}
+        >
+          📝 模擬試験（60問・60分）
+        </button>
       </div>
+
+      {/* 模擬試験モーダル */}
+      {showExam && (
+        <MockExam
+          onClose={() => setShowExam(false)}
+          setTestHistory={setTestHistory}
+        />
+      )}
 
       {/* リセット */}
       <div className="card">
@@ -4499,6 +4567,206 @@ function NigatebunTab({ globalProgress, setGlobalProgress, testHistory }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// 📍 CHECKPOINT: フェーズ15 完了（仕上げ・結合・模擬試験）
+
+// ─── 模擬試験クイズ生成 ────────────────────────────────────
+const buildMockExam = () => {
+  const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+  const pool    = shuffle(allHeritageData);
+  const allC    = [...new Set(allHeritageData.map(h => h.country))];
+  const allY    = [...new Set(allHeritageData.map(h => String(h.year)))];
+  const allCrit = ["i","ii","iii","iv","v","vi","vii","viii","ix","x"];
+  const qs = [];
+
+  // 国名クイズ (15問)
+  pool.slice(0, 15).forEach(h => {
+    const ws = shuffle(allC.filter(c => c !== h.country)).slice(0,3);
+    qs.push(makeQuiz(`「${h.name}」の所在国は？`, h.country, ws,
+      `${h.name}は${h.country}にある${h.type}（${h.year}年登録）。`));
+  });
+  // 登録年クイズ (15問)
+  pool.slice(15, 30).forEach(h => {
+    const ws = shuffle(allY.filter(y => y !== String(h.year))).slice(0,3).map(y=>y+"年");
+    qs.push(makeQuiz(`「${h.name}」の登録年は？`, h.year+"年", ws,
+      `${h.name}は${h.year}年登録。${h.country}の${h.type}。`));
+  });
+  // 種別クイズ (10問)
+  pool.slice(30, 40).forEach(h => {
+    qs.push(makeQuiz(`「${h.name}」の種別は？`, h.type,
+      ["文化遺産","自然遺産","複合遺産"].filter(t=>t!==h.type),
+      `${h.name}は${h.type}（登録基準：${h.criteria.join("・")}）。`));
+  });
+  // 登録基準クイズ (10問)
+  pool.slice(40, 50).filter(h=>h.criteria.length>0).slice(0,10).forEach(h => {
+    const correct = `基準${h.criteria[0]}`;
+    const ws = shuffle(allCrit.filter(c=>!h.criteria.includes(c))).slice(0,3).map(c=>`基準${c}`);
+    qs.push(makeQuiz(`「${h.name}」が持つ登録基準のひとつは？`, correct, ws,
+      `${h.name}の登録基準は${h.criteria.map(c=>`基準${c}`).join("・")}。`));
+  });
+  // ひっかけクイズ (10問)
+  trickQuestions.forEach(t => {
+    qs.push(makeQuiz("次のうち正しい記述はどれ？", t.correct,
+      [t.trap, "どちらも正しい", "どちらも誤り"],
+      `正しくは「${t.correct}」。よくある誤解：${t.trap}。`));
+  });
+  return shuffle(qs).slice(0, 60);
+};
+
+// ─── 模擬試験コンポーネント ────────────────────────────────
+function MockExam({ onClose, setTestHistory }) {
+  const TOTAL_TIME = 60 * 60;
+  const [screen,   setScreen]   = useState("intro");
+  const [questions,setQuestions]= useState([]);
+  const [idx,      setIdx]      = useState(0);
+  const [results,  setResults]  = useState([]);
+  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
+  const [started,  setStarted]  = useState(false);
+  const [finished, setFinished] = useState(false);
+  const timeUsed = TOTAL_TIME - timeLeft;
+
+  useEffect(() => {
+    if (!started || finished || screen !== "exam") return;
+    const t = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) { clearInterval(t); setFinished(true); setScreen("result"); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [started, finished, screen]);
+
+  const startExam = () => {
+    setQuestions(buildMockExam());
+    setStarted(true); setScreen("exam");
+    setIdx(0); setResults([]); setTimeLeft(TOTAL_TIME);
+  };
+
+  const handleAnswer = (ok) => {
+    const updated = [...results, ok];
+    setResults(updated);
+    if (updated.length >= questions.length) {
+      const correct = updated.filter(Boolean).length;
+      setTestHistory(prev => [...prev, {
+        section: "模擬試験（60問）",
+        correct, total: questions.length, date: Date.now()
+      }]);
+      setFinished(true); setScreen("result");
+    } else {
+      setTimeout(() => setIdx(i => i + 1), 900);
+    }
+  };
+
+  const fmt = (s) => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+  const score   = results.filter(Boolean).length;
+  const pct     = questions.length ? Math.round(score / questions.length * 100) : 0;
+  const pass    = pct >= 70;
+
+  if (screen === "intro") {
+    return (
+      <div className="exam-screen">
+        <div className="exam-header">
+          <span style={{ fontWeight:700 }}>📝 模擬試験</span>
+          <button onClick={onClose} style={{ background:"rgba(255,255,255,0.2)", border:"none", color:"#fff", padding:"5px 10px", borderRadius:8, cursor:"pointer", fontFamily:"var(--font-main)", fontSize:12 }}>✕ 閉じる</button>
+        </div>
+        <div className="exam-body">
+          <div className="exam-intro">
+            <div style={{ fontSize:56, marginBottom:12 }}>🏛️</div>
+            <div className="exam-intro-title">世界遺産検定 模擬試験</div>
+            <div className="exam-intro-sub">
+              全<strong>60問</strong> · 制限時間<strong>60分</strong><br/>
+              70%（42問）以上正解で合格判定<br/><br/>
+              国名・登録年・種別・登録基準・ひっかけ問題を出題。
+              本番さながらの練習で実力を確認しよう！
+            </div>
+            <button className="exam-start-btn" onClick={startExam}>試験開始 →</button>
+            <button onClick={onClose} className="btn btn-ghost" style={{ width:"100%", justifyContent:"center" }}>キャンセル</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "result") {
+    return (
+      <div className="exam-screen">
+        <div className="exam-header">
+          <span style={{ fontWeight:700 }}>📊 試験結果</span>
+          <button onClick={onClose} style={{ background:"rgba(255,255,255,0.2)", border:"none", color:"#fff", padding:"5px 10px", borderRadius:8, cursor:"pointer", fontFamily:"var(--font-main)", fontSize:12 }}>✕ 閉じる</button>
+        </div>
+        <div className="exam-body">
+          <div style={{ textAlign:"center", padding:"32px 16px" }}>
+            <div className={`exam-result-grade ${pass?"exam-pass":"exam-fail"}`}>{pass?"🎉":"📖"}</div>
+            <div style={{ fontSize:22, fontWeight:700, marginBottom:4, color: pass?"#2e8b57":"#dc2626" }}>
+              {pass ? "合格！" : "不合格"}
+            </div>
+            <div style={{ fontSize:14, color:"var(--color-text-light)", marginBottom:24 }}>
+              合格ライン：70%（42問）以上
+            </div>
+            <div className="quiz-result-wrap">
+              <div className="quiz-result-score" style={{ fontSize:56 }}>{score}<span style={{ fontSize:24 }}>/{questions.length}</span></div>
+              <div className="quiz-result-label">正解数 ({pct}%)</div>
+              <div style={{ fontSize:13, color:"var(--color-text-light)", marginTop:8 }}>
+                所要時間：{fmt(timeUsed)}
+              </div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginTop:16, marginBottom:24 }}>
+              {[
+                ["正解", score+"問", "#2e8b57"],
+                ["不正解", (questions.length-score)+"問", "#dc2626"],
+                ["正答率", pct+"%", pass?"#2e8b57":"#dc2626"],
+              ].map(([l,v,c]) => (
+                <div key={l} style={{ background:`${c}10`, border:`1px solid ${c}40`, borderRadius:8, padding:"10px 8px", textAlign:"center" }}>
+                  <div style={{ fontSize:18, fontWeight:700, color:c }}>{v}</div>
+                  <div style={{ fontSize:11, color:"var(--color-text-light)" }}>{l}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize:13, color:"var(--color-text-light)", marginBottom:20 }}>
+              {pass
+                ? "🎊 素晴らしい！この調子で本番も頑張りましょう。"
+                : pct >= 60
+                  ? "あと少し！苦手分野を重点的に復習しましょう。"
+                  : "基礎から丁寧に復習しましょう。①基礎知識タブから始めるのがおすすめです。"
+              }
+            </div>
+            <div style={{ display:"flex", gap:8, flexDirection:"column" }}>
+              <button className="exam-start-btn" onClick={startExam}>もう一度受験</button>
+              <button onClick={onClose} className="btn btn-ghost" style={{ width:"100%", justifyContent:"center" }}>タブに戻る</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 試験中
+  const timerClass = timeLeft <= 300 ? "danger" : timeLeft <= 600 ? "warning" : "";
+  const q = questions[idx];
+  return (
+    <div className="exam-screen">
+      <div className="exam-header">
+        <div>
+          <div style={{ fontSize:11, opacity:0.8 }}>{idx+1} / {questions.length}問</div>
+          <div className="progress-bar-wrap" style={{ width:120, background:"rgba(255,255,255,0.3)", marginTop:2 }}>
+            <div className="progress-bar-fill" style={{ width:`${(idx/questions.length)*100}%`, background:"rgba(255,255,255,0.8)" }} />
+          </div>
+        </div>
+        <div className={`exam-timer ${timerClass}`}>{fmt(timeLeft)}</div>
+        <button onClick={() => { setFinished(true); setScreen("result"); }}
+          style={{ background:"rgba(255,255,255,0.2)", border:"none", color:"#fff", padding:"5px 10px", borderRadius:8, cursor:"pointer", fontFamily:"var(--font-main)", fontSize:12 }}>
+          終了
+        </button>
+      </div>
+      <div className="exam-body">
+        <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:4 }}>
+          正解数：{results.filter(Boolean).length} / {results.length}問
+        </div>
+        {q && <QuizComponent key={idx} quiz={q} onResult={handleAnswer} />}
       </div>
     </div>
   );
