@@ -7,7 +7,7 @@
 フェーズ3:  データ②(世界前半)     [✅] 完了
 フェーズ4:  データ③(世界後半)     [✅] 完了
 フェーズ5:  共通コンポーネント    [✅] 完了
-フェーズ6:  ホーム画面            [ ] 未着手
+フェーズ6:  ホーム画面            [✅] 完了
 フェーズ7:  ①基礎知識 前半       [ ] 未着手
 フェーズ8:  ①基礎知識 後半       [ ] 未着手
 フェーズ9:  ②地域別 前半         [ ] 未着手
@@ -18,7 +18,7 @@
 フェーズ14: AI機能統合            [ ] 未着手
 フェーズ15: 仕上げ・結合          [ ] 未着手
 ========================================
-最終更新: フェーズ5完了後
+最終更新: フェーズ6完了後
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -2001,6 +2001,112 @@ const STYLES = `
     color: #6a4ca8; margin-bottom: 6px;
   }
 
+  /* ─── ホーム画面 ────────────────────────────── */
+  .home-header {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-lavender) 100%);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    color: #fff;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .home-header::after {
+    content: "🏛️";
+    position: absolute; right: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 56px; opacity: 0.25;
+  }
+  .home-header-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .home-header-sub   { font-size: 12px; opacity: 0.85; }
+
+  .search-wrap { position: relative; margin-bottom: 16px; }
+  .search-input {
+    width: 100%; padding: 11px 14px 11px 38px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--color-border);
+    font-family: var(--font-main); font-size: 14px;
+    background: var(--color-card-bg); outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--color-primary); }
+  .search-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-light); font-size: 16px;
+    pointer-events: none;
+  }
+  .search-results {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: #fff; border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); z-index: 50;
+    box-shadow: var(--shadow-md); max-height: 240px; overflow-y: auto;
+  }
+  .search-result-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; cursor: pointer;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 13px; transition: background 0.15s;
+  }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: rgba(255,143,171,0.06); }
+  .search-result-flag { font-size: 18px; flex-shrink: 0; }
+  .search-result-name { font-weight: 600; }
+  .search-result-sub  { font-size: 11px; color: var(--color-text-light); }
+
+  .exam-card {
+    background: linear-gradient(135deg, rgba(255,209,102,0.15), rgba(255,143,171,0.08));
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    padding: 16px; margin-bottom: 16px;
+  }
+  .exam-card-label { font-size: 12px; color: var(--color-text-light); margin-bottom: 6px; }
+  .exam-date-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .exam-date-input {
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+    padding: 6px 10px; font-family: var(--font-main); font-size: 13px;
+    background: #fff; color: var(--color-text);
+  }
+  .exam-countdown {
+    font-size: 22px; font-weight: 700; color: var(--color-primary);
+    margin-top: 8px;
+  }
+  .exam-countdown-sub { font-size: 12px; color: var(--color-text-light); }
+
+  .progress-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+  .progress-table th {
+    text-align: left; padding: 8px 10px;
+    background: rgba(255,143,171,0.08); color: var(--color-text);
+    font-weight: 600; border-bottom: 2px solid var(--color-border);
+  }
+  .progress-table td { padding: 9px 10px; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+  .progress-table tr:last-child td { border-bottom: none; }
+  .progress-mini-bar {
+    height: 6px; border-radius: 4px;
+    background: var(--color-border); overflow: hidden; min-width: 60px;
+  }
+  .progress-mini-fill {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-lavender));
+    transition: width 0.4s ease;
+  }
+
+  .history-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--color-border); font-size: 13px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-score { font-weight: 700; color: var(--color-primary); }
+  .history-date  { font-size: 11px; color: var(--color-text-light); }
+
+  .reset-btn {
+    width: 100%; padding: 11px; border-radius: var(--radius-sm);
+    border: 1px solid #fca5a5; background: rgba(252,165,165,0.1);
+    color: #dc2626; font-family: var(--font-main); font-size: 13px;
+    cursor: pointer; margin-top: 4px; transition: all 0.2s;
+  }
+  .reset-btn:hover { background: #dc2626; color: #fff; }
+
   /* ─── レスポンシブ ──────────────────────────── */
   @media (max-width: 375px) {
     .tab-content { padding: 12px; }
@@ -2248,6 +2354,254 @@ function AIButton({ type, id, label = "AI解説", delay = 800 }) {
   );
 }
 
+// 📍 CHECKPOINT: フェーズ6 完了
+
+// ─── ホーム画面 ─────────────────────────────────────────────
+function HomeTab({ onNavigate, globalProgress, setGlobalProgress, examDate, setExamDate, testHistory, setTestHistory, reviewStatus, setReviewStatus }) {
+  const [query, setQuery]           = useState("");
+  const [results, setResults]       = useState([]);
+  const [selected, setSelected]     = useState(null);
+  const [showReset, setShowReset]   = useState(false);
+
+  // ── 検索 ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!query.trim()) { setResults([]); return; }
+    const q = query.trim().toLowerCase();
+    const found = allHeritageData.filter(h =>
+      h.name.includes(query.trim()) ||
+      h.nameEn.toLowerCase().includes(q) ||
+      h.country.includes(query.trim()) ||
+      (h.keywords || []).some(k => k.includes(query.trim()))
+    ).slice(0, 8);
+    setResults(found);
+  }, [query]);
+
+  // ── 試験日カウントダウン ────────────────────────────────
+  const daysLeft = (() => {
+    if (!examDate) return null;
+    const diff = new Date(examDate) - new Date(new Date().toDateString());
+    return Math.ceil(diff / 86400000);
+  })();
+
+  // ── 進捗計算 ────────────────────────────────────────────
+  const calcPct = (obj) => {
+    const vals = Object.values(obj);
+    const done = vals.filter(Boolean).length;
+    return { done, total: vals.length, pct: Math.round(done / vals.length * 100) };
+  };
+
+  const progressRows = [
+    { label: "①基礎知識", tab: "kisochishiki", ...calcPct(globalProgress.kisochishiki) },
+    { label: "②地域別",   tab: "chiikibetsu",  ...calcPct(globalProgress.chiikibetsu) },
+    { label: "③時代別",   tab: "jidaibetsu",   ...calcPct(globalProgress.jidaibetsu) },
+    { label: "④登録基準", tab: "kijunbetsu",   ...calcPct(globalProgress.kijunbetsu) },
+    { label: "⑤苦手分析", tab: "nigatebun",    ...calcPct(globalProgress.nigatebun) },
+  ];
+  const overallPct = Math.round(progressRows.reduce((s, r) => s + r.pct, 0) / progressRows.length);
+
+  // ── リセット ────────────────────────────────────────────
+  const handleReset = () => {
+    setGlobalProgress({
+      kisochishiki: { A: false, B: false, C: false, D: false, E: false },
+      chiikibetsu:  { asia: false, europe: false, africa: false, middleEast: false, northAmerica: false, southAmerica: false, oceania: false },
+      jidaibetsu:   { ancient: false, classical: false, medieval: false, earlyModern: false, modern: false, contemporary: false },
+      kijunbetsu:   { i: false, ii: false, iii: false, iv: false, v: false, vi: false, vii: false, viii: false, ix: false, x: false },
+      nigatebun:    { analyzed: false }
+    });
+    setTestHistory([]);
+    setReviewStatus({});
+    setExamDate("");
+    setShowReset(false);
+  };
+
+  return (
+    <div>
+      {/* ヘッダー */}
+      <div className="home-header">
+        <div className="home-header-title">🌍 世界遺産検定 学習アプリ</div>
+        <div className="home-header-sub">2級・準1級対策 · 全{allHeritageData.length}件収録</div>
+        <div style={{ marginTop: 10, fontSize: 13, opacity: 0.9 }}>
+          総合進捗 <strong>{overallPct}%</strong>
+        </div>
+        <div className="progress-bar-wrap" style={{ marginTop: 6, background: "rgba(255,255,255,0.3)" }}>
+          <div className="progress-bar-fill" style={{ width: `${overallPct}%`, background: "rgba(255,255,255,0.8)" }} />
+        </div>
+      </div>
+
+      {/* 検索バー */}
+      <div className="search-wrap">
+        <span className="search-icon">🔍</span>
+        <input
+          className="search-input"
+          type="text"
+          placeholder="遺産名・国名・キーワードで検索..."
+          value={query}
+          onChange={e => { setQuery(e.target.value); setSelected(null); }}
+        />
+        {results.length > 0 && (
+          <div className="search-results">
+            {results.map(h => (
+              <div key={h.id} className="search-result-item" onClick={() => { setSelected(h); setQuery(""); setResults([]); }}>
+                <span className="search-result-flag">{h.countryFlag}</span>
+                <div>
+                  <div className="search-result-name">{h.name}</div>
+                  <div className="search-result-sub">{h.country} · {h.year}年 · {h.type}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 検索結果詳細 */}
+      {selected && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>{selected.countryFlag} {selected.name}</div>
+            <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "var(--color-text-light)" }}>✕</button>
+          </div>
+          <div style={{ fontSize: 12, color: "var(--color-text-light)", margin: "4px 0 8px" }}>
+            {selected.country} · {selected.year}年 · {selected.type}
+          </div>
+          <div style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}>{selected.description}</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {selected.criteria.map(c => (
+              <span key={c} className="badge badge-criteria">基準{c}</span>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <YouTubeButton query={selected.youtubeQuery || selected.name} />
+            <AIButton type="story" id={selected.id} label="AIストーリー" delay={1000} />
+          </div>
+        </div>
+      )}
+
+      {/* 試験日カード */}
+      <div className="exam-card">
+        <div className="exam-card-label">📅 試験日設定</div>
+        <div className="exam-date-row">
+          <input
+            className="exam-date-input"
+            type="date"
+            value={examDate}
+            onChange={e => setExamDate(e.target.value)}
+          />
+          {daysLeft !== null && (
+            <div>
+              {daysLeft > 0
+                ? <div className="exam-countdown">あと{daysLeft}日</div>
+                : daysLeft === 0
+                  ? <div className="exam-countdown" style={{ color: "var(--color-accent)" }}>試験当日！</div>
+                  : <div className="exam-countdown" style={{ color: "#888", fontSize: 16 }}>試験終了</div>
+              }
+            </div>
+          )}
+        </div>
+        {!examDate && (
+          <div className="exam-countdown-sub" style={{ marginTop: 6 }}>試験日を設定するとカウントダウンが表示されます</div>
+        )}
+      </div>
+
+      {/* 進捗テーブル */}
+      <div className="card">
+        <div className="card-title">📊 学習進捗</div>
+        <table className="progress-table">
+          <thead>
+            <tr>
+              <th>タブ</th>
+              <th>進捗</th>
+              <th style={{ width: 80 }}>完了率</th>
+            </tr>
+          </thead>
+          <tbody>
+            {progressRows.map(r => (
+              <tr key={r.tab} onClick={() => onNavigate(r.tab)} style={{ cursor: "pointer" }}>
+                <td style={{ fontWeight: 600 }}>{r.label}</td>
+                <td>
+                  <div className="progress-mini-bar">
+                    <div className="progress-mini-fill" style={{ width: `${r.pct}%` }} />
+                  </div>
+                </td>
+                <td style={{ fontSize: 13, fontWeight: 700, color: r.pct === 100 ? "#2e8b57" : "var(--color-text)" }}>
+                  {r.pct}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* テスト履歴 */}
+      {testHistory.length > 0 && (
+        <div className="card">
+          <div className="card-title">📝 最近の学習履歴</div>
+          {testHistory.slice(-5).reverse().map((h, i) => (
+            <div key={i} className="history-item">
+              <div>
+                <div style={{ fontWeight: 600 }}>{h.section}</div>
+                <div className="history-date">{new Date(h.date).toLocaleDateString("ja-JP")}</div>
+              </div>
+              <div className="history-score">
+                {h.correct}/{h.total}問 ({Math.round(h.correct / h.total * 100)}%)
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* クイックリンク */}
+      <div className="card">
+        <div className="card-title">🚀 学習を始める</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {[
+            { label: "①基礎知識", tab: "kisochishiki", emoji: "📖" },
+            { label: "②地域別",   tab: "chiikibetsu",  emoji: "🗺️" },
+            { label: "③時代別",   tab: "jidaibetsu",   emoji: "⏳" },
+            { label: "④登録基準", tab: "kijunbetsu",   emoji: "⭐" },
+          ].map(({ label, tab, emoji }) => (
+            <button
+              key={tab}
+              className="btn btn-ghost"
+              style={{ justifyContent: "flex-start", padding: "12px" }}
+              onClick={() => onNavigate(tab)}
+            >
+              {emoji} {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* リセット */}
+      <div className="card">
+        <div className="card-title" style={{ fontSize: 13, color: "var(--color-text-light)" }}>⚙️ データ管理</div>
+        {!showReset ? (
+          <button className="reset-btn" onClick={() => setShowReset(true)}>
+            🗑️ 学習データをリセット
+          </button>
+        ) : (
+          <div>
+            <div style={{ fontSize: 13, marginBottom: 10, color: "#dc2626" }}>
+              本当にリセットしますか？進捗・履歴・試験日がすべて削除されます。
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="reset-btn" style={{ flex: 1 }} onClick={handleReset}>
+                削除する
+              </button>
+              <button
+                className="btn btn-ghost"
+                style={{ flex: 1, justifyContent: "center" }}
+                onClick={() => setShowReset(false)}
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── プレースホルダータブ（後フェーズで実装） ──────────────
 function PlaceholderTab({ title }) {
   return (
@@ -2317,7 +2671,7 @@ export default function App() {
   // ── タブコンテンツ描画 ────────────────────────────────────
   const renderTab = () => {
     switch (activeTab) {
-      case "home":         return <PlaceholderTab title="ホーム画面（フェーズ6で実装）" />;
+      case "home":         return <HomeTab {...tabProps} />;
       case "kisochishiki": return <PlaceholderTab title="①基礎知識タブ（フェーズ7・8で実装）" />;
       case "chiikibetsu":  return <PlaceholderTab title="②地域別タブ（フェーズ9・10で実装）" />;
       case "jidaibetsu":   return <PlaceholderTab title="③時代別タブ（フェーズ11で実装）" />;
