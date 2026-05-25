@@ -11,14 +11,14 @@
 フェーズ7:  ①基礎知識 前半       [✅] 完了
 フェーズ8:  ①基礎知識 後半       [✅] 完了
 フェーズ9:  ②地域別 前半         [✅] 完了
-フェーズ10: ②地域別 後半         [ ] 未着手
+フェーズ10: ②地域別 後半         [✅] 完了
 フェーズ11: ③時代別              [ ] 未着手
 フェーズ12: ④登録基準別          [ ] 未着手
 フェーズ13: ⑤苦手分析            [ ] 未着手
 フェーズ14: AI機能統合            [ ] 未着手
 フェーズ15: 仕上げ・結合          [ ] 未着手
 ========================================
-最終更新: フェーズ9完了後
+最終更新: フェーズ10完了後
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -2217,6 +2217,39 @@ const STYLES = `
     font-family: var(--font-main); font-size: 14px; cursor: pointer; margin-top: 8px;
   }
 
+  /* ─── 学習モードカード ──────────────────────── */
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .mode-card {
+    border-radius: var(--radius-md); padding: 16px 12px; text-align: center;
+    cursor: pointer; border: 2px solid var(--color-border);
+    background: var(--color-card-bg); transition: all 0.2s;
+  }
+  .mode-card:hover { border-color: var(--color-primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .mode-card-emoji { font-size: 28px; margin-bottom: 6px; }
+  .mode-card-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .mode-card-desc  { font-size: 11px; color: var(--color-text-light); line-height: 1.4; }
+
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .filter-btn {
+    padding: 5px 10px; border-radius: 16px; border: 1px solid var(--color-border);
+    background: var(--color-card-bg); color: var(--color-text-light);
+    font-family: var(--font-main); font-size: 11px; cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+  .story-card {
+    background: var(--color-card-bg); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .story-card-img {
+    width: 72px; height: 72px; border-radius: var(--radius-sm);
+    object-fit: cover; flex-shrink: 0; background: var(--color-border);
+  }
+  .story-card-body { flex: 1; min-width: 0; }
+  .story-card-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .story-card-sub  { font-size: 11px; color: var(--color-text-light); margin-bottom: 8px; }
+
   /* ─── レスポンシブ ──────────────────────────── */
   @media (max-width: 375px) {
     .tab-content { padding: 12px; }
@@ -3345,11 +3378,28 @@ function HeritageDetailModal({ heritage, onClose }) {
   );
 }
 
-// ─── ②地域別タブ ──────────────────────────────────────────
+// 📍 CHECKPOINT: フェーズ10 完了
+
+// クイズ作成ヘルパー
+const makeQuiz = (question, correct, wrongs, explanation) => {
+  const pool = [correct, ...wrongs.filter(w => w !== correct).slice(0, 3)];
+  while (pool.length < 4) pool.push("—");
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return { question, choices: shuffled, correctIndex: shuffled.indexOf(correct), explanation };
+};
+
+// ─── ②地域別タブ（フェーズ9+10統合版） ───────────────────────
 function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHistory, setTestHistory }) {
-  const [selectedRegion, setSelectedRegion] = useState(null);
-  const [selectedHeritage, setSelectedHeritage] = useState(null);
-  const [sortBy, setSortBy] = useState("year");
+  const [selectedRegion,  setSelectedRegion]  = useState(null);
+  const [selectedHeritage,setSelectedHeritage]= useState(null);
+  const [sortBy,          setSortBy]          = useState("year");
+  const [typeFilter,      setTypeFilter]      = useState("all");
+  const [diffFilter,      setDiffFilter]      = useState(0);
+  const [learningMode,    setLearningMode]    = useState(null);
+  const [modeQuizzes,     setModeQuizzes]     = useState([]);
+  const [modeIdx,         setModeIdx]         = useState(0);
+  const [modeResults,     setModeResults]     = useState([]);
+  const [modeShowResult,  setModeShowResult]  = useState(false);
 
   const prog = globalProgress.chiikibetsu;
 
@@ -3362,24 +3412,89 @@ function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHis
 
   const getRegionData = (regionId) => {
     if (regionId === "asia") {
-      return [
-        ...japanHeritageData,
-        ...worldHeritageDataPart1.filter(h => h.region === "asia")
-      ];
+      return [...japanHeritageData, ...worldHeritageDataPart1.filter(h => h.region === "asia")];
     }
     return worldHeritageDataPart1.filter(h => h.region === regionId)
       .concat(worldHeritageDataPart2.filter(h => h.region === regionId));
   };
 
-  const sortedList = (list) => {
-    if (sortBy === "year")       return [...list].sort((a,b) => a.year - b.year);
-    if (sortBy === "difficulty") return [...list].sort((a,b) => b.difficulty - a.difficulty);
-    if (sortBy === "freq")       return [...list].sort((a,b) => {
+  const applyFilters = (list) => {
+    let filtered = list;
+    if (typeFilter !== "all") filtered = filtered.filter(h => h.type === typeFilter);
+    if (diffFilter > 0)       filtered = filtered.filter(h => h.difficulty === diffFilter);
+    if (sortBy === "year")       return [...filtered].sort((a,b) => a.year - b.year);
+    if (sortBy === "difficulty") return [...filtered].sort((a,b) => b.difficulty - a.difficulty);
+    if (sortBy === "freq") {
       const o = {"高":0,"中":1,"低":2};
-      return o[a.examFrequency] - o[b.examFrequency];
-    });
-    return list;
+      return [...filtered].sort((a,b) => o[a.examFrequency] - o[b.examFrequency]);
+    }
+    return filtered;
   };
+
+  // クイズ生成（国名・登録年・種別・基準）
+  const buildQuizzes = (list, mode) => {
+    const allCountries = [...new Set(allHeritageData.map(h => h.country))];
+    const allYears     = [...new Set(allHeritageData.map(h => String(h.year)))];
+    const shuffle      = arr => [...arr].sort(() => Math.random() - 0.5);
+
+    let pool = mode === "hard"
+      ? list.filter(h => h.difficulty >= 2)
+      : shuffle(list).slice(0, mode === "random" ? 10 : list.length);
+    if (pool.length === 0) pool = list;
+
+    return pool.map((h, i) => {
+      const qType = mode === "hard"
+        ? (i % 2 === 0 ? "criteria" : "year")
+        : ["country","year","type","criteria"][i % 4];
+
+      if (qType === "country") {
+        const wrongs = shuffle(allCountries.filter(c => c !== h.country)).slice(0,3);
+        return makeQuiz(`「${h.name}」の所在国は？`, h.country, wrongs,
+          `${h.name}は${h.country}にある${h.type}（${h.year}年登録）。`);
+      }
+      if (qType === "year") {
+        const yw = shuffle(allYears.filter(y => y !== String(h.year))).slice(0,3);
+        return makeQuiz(`「${h.name}」の登録年は？`, String(h.year)+"年", yw.map(y=>y+"年"),
+          `${h.name}は${h.year}年に${h.type}として登録（${h.country}）。`);
+      }
+      if (qType === "type") {
+        return makeQuiz(`「${h.name}」の種別は？`, h.type,
+          ["文化遺産","自然遺産","複合遺産"].filter(t=>t!==h.type),
+          `${h.name}は${h.type}（登録基準：${h.criteria.join("・")}）。`);
+      }
+      // criteria
+      const correctC = `基準${h.criteria[0]}`;
+      const wrongCs  = shuffle(["i","ii","iii","iv","v","vi","vii","viii","ix","x"]
+        .filter(c => !h.criteria.includes(c))).slice(0,3).map(c=>`基準${c}`);
+      return makeQuiz(`「${h.name}」が持つ登録基準のひとつは？`, correctC, wrongCs,
+        `${h.name}の登録基準は${h.criteria.map(c=>`基準${c}`).join("・")}。`);
+    });
+  };
+
+  const startMode = (mode) => {
+    const list = getRegionData(selectedRegion);
+    setModeQuizzes(buildQuizzes(list, mode));
+    setModeIdx(0); setModeResults([]); setModeShowResult(false);
+    setLearningMode(mode);
+  };
+
+  const handleModeResult = (ok) => {
+    const updated = [...modeResults, ok];
+    setModeResults(updated);
+    if (updated.length === modeQuizzes.length) {
+      setTestHistory(prev => [...prev, {
+        section: `②地域別 ${REGIONS.find(r=>r.id===selectedRegion)?.label}`,
+        correct: updated.filter(Boolean).length, total: modeQuizzes.length,
+        date: Date.now()
+      }]);
+      markDone(selectedRegion);
+      setModeShowResult(true);
+    } else {
+      setTimeout(() => setModeIdx(i => i + 1), 900);
+    }
+  };
+
+  const resetMode = () => { setModeIdx(0); setModeResults([]); setModeShowResult(false); };
 
   // ── 地域一覧ビュー ────────────────────────────────────────
   const renderRegionGrid = () => (
@@ -3393,11 +3508,9 @@ function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHis
           const list = getRegionData(r.id);
           const done = prog[r.id];
           return (
-            <div
-              key={r.id}
-              className={`region-card${done ? " done" : ""}`}
-              style={{ background: r.color, borderColor: done ? "#2e8b57" : r.border }}
-              onClick={() => setSelectedRegion(r.id)}
+            <div key={r.id} className={`region-card${done?" done":""}`}
+              style={{ background:r.color, borderColor:done?"#2e8b57":r.border }}
+              onClick={() => { setSelectedRegion(r.id); setLearningMode(null); }}
             >
               {done && <span className="region-card-done">✅</span>}
               <div className="region-card-emoji">{r.emoji}</div>
@@ -3407,8 +3520,6 @@ function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHis
           );
         })}
       </div>
-
-      {/* 進捗サマリー */}
       <div className="card">
         <div className="card-title">📊 地域別進捗</div>
         {REGIONS.map(r => {
@@ -3426,11 +3537,10 @@ function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHis
     </div>
   );
 
-  // ── 遺産リストビュー ──────────────────────────────────────
-  const renderHeritageList = () => {
+  // ── 学習モード選択 ────────────────────────────────────────
+  const renderModeSelect = () => {
     const region = REGIONS.find(r => r.id === selectedRegion);
-    const list   = sortedList(getRegionData(selectedRegion));
-
+    const list   = getRegionData(selectedRegion);
     return (
       <div>
         <div className="heritage-list-header">
@@ -3440,31 +3550,135 @@ function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHis
             <div style={{ fontSize:11, color:"var(--color-text-light)" }}>{list.length}件</div>
           </div>
         </div>
+        <div className="mode-grid">
+          {[
+            { id:"list",   emoji:"📋", title:"遺産一覧",         desc:"全遺産をカード表示・フィルタ" },
+            { id:"random", emoji:"🎲", title:"ランダムクイズ",   desc:"10問・国名/年/種別/基準" },
+            { id:"hard",   emoji:"🔥", title:"難問チャレンジ",   desc:"難易度★2以上・基準/年" },
+            { id:"story",  emoji:"📖", title:"AIストーリー",     desc:"各遺産のAIナレーション" },
+          ].map(m => (
+            <div key={m.id} className="mode-card" onClick={() => {
+              if (m.id === "list") setLearningMode("list");
+              else startMode(m.id);
+            }}>
+              <div className="mode-card-emoji">{m.emoji}</div>
+              <div className="mode-card-title">{m.title}</div>
+              <div className="mode-card-desc">{m.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
-        {/* 並び順 */}
-        <div style={{ display:"flex", gap:6, marginBottom:12, flexWrap:"wrap" }}>
-          {[["year","登録年順"],["difficulty","難易度順"],["freq","出題頻度順"]].map(([v,l]) => (
-            <button
-              key={v}
-              className={`section-tab-btn${sortBy===v?" active":""}`}
-              style={{ fontSize:11 }}
-              onClick={() => setSortBy(v)}
-            >
-              {l}
+  // ── 遺産一覧（フィルタ付き） ──────────────────────────────
+  const renderList = () => {
+    const region = REGIONS.find(r => r.id === selectedRegion);
+    const list   = applyFilters(getRegionData(selectedRegion));
+    return (
+      <div>
+        <div className="heritage-list-header">
+          <button className="heritage-list-back" onClick={() => setLearningMode(null)}>← モード選択</button>
+          <div>
+            <div className="heritage-list-title">{region.emoji} {region.label}</div>
+            <div style={{ fontSize:11, color:"var(--color-text-light)" }}>{list.length}件</div>
+          </div>
+        </div>
+        <div className="filter-row">
+          {["all","文化遺産","自然遺産","複合遺産"].map(t => (
+            <button key={t} className={`filter-btn${typeFilter===t?" active":""}`} onClick={() => setTypeFilter(t)}>
+              {t === "all" ? "すべて" : t}
             </button>
           ))}
-          <button
-            className="btn btn-ghost"
-            style={{ fontSize:11, marginLeft:"auto" }}
-            onClick={() => markDone(selectedRegion)}
-          >
-            ✅ 完了にする
-          </button>
         </div>
+        <div className="filter-row" style={{ marginBottom:8 }}>
+          {[0,1,2,3].map(d => (
+            <button key={d} className={`filter-btn${diffFilter===d?" active":""}`} onClick={() => setDiffFilter(d)}>
+              {d === 0 ? "難易度：全" : "★".repeat(d)}
+            </button>
+          ))}
+          <div style={{ marginLeft:"auto", display:"flex", gap:6 }}>
+            {[["year","年順"],["freq","頻度"]].map(([v,l]) => (
+              <button key={v} className={`filter-btn${sortBy===v?" active":""}`} onClick={() => setSortBy(v)}>{l}</button>
+            ))}
+          </div>
+        </div>
+        {list.length === 0
+          ? <div style={{ textAlign:"center", padding:40, color:"var(--color-text-light)" }}>条件に合う遺産がありません</div>
+          : list.map(h => <HeritageCard key={h.id} heritage={h} onClick={setSelectedHeritage} />)
+        }
+        <button className="btn btn-ghost" style={{ width:"100%", justifyContent:"center", marginTop:8 }} onClick={() => markDone(selectedRegion)}>
+          ✅ このエリア学習完了
+        </button>
+      </div>
+    );
+  };
 
-        {/* 遺産カード一覧 */}
+  // ── クイズ実行ビュー ──────────────────────────────────────
+  const renderQuizRunner = (title) => {
+    const score = modeResults.filter(Boolean).length;
+    const pct   = modeQuizzes.length ? Math.round(score / modeQuizzes.length * 100) : 0;
+    return (
+      <div>
+        <div className="heritage-list-header">
+          <button className="heritage-list-back" onClick={() => setLearningMode(null)}>← モード選択</button>
+          <div className="heritage-list-title">{title}</div>
+        </div>
+        <div className="card">
+          {!modeShowResult ? (
+            <>
+              <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:8 }}>
+                問題 {Math.min(modeIdx+1, modeQuizzes.length)} / {modeQuizzes.length}
+                &nbsp;·&nbsp;正解 {modeResults.filter(Boolean).length}問
+              </div>
+              <div className="progress-bar-wrap" style={{ marginBottom:14 }}>
+                <div className="progress-bar-fill" style={{ width:`${(modeIdx/modeQuizzes.length)*100}%` }} />
+              </div>
+              <QuizComponent key={modeIdx} quiz={modeQuizzes[modeIdx]} onResult={handleModeResult} />
+            </>
+          ) : (
+            <div className="quiz-result-wrap">
+              <div className="quiz-result-score">{score}/{modeQuizzes.length}</div>
+              <div className="quiz-result-label">正解数 ({pct}%)</div>
+              <div className="quiz-result-msg">
+                {pct===100?"🎉 満点！":pct>=75?"👏 よくできました！":pct>=50?"📖 もう少し復習を":"💪 繰り返し練習しよう"}
+              </div>
+              <div style={{ marginTop:14, display:"flex", gap:8, justifyContent:"center" }}>
+                <button className="btn btn-primary" onClick={() => { startMode(learningMode); }}>もう一度</button>
+                <button className="btn btn-ghost" onClick={() => setLearningMode(null)}>モード選択へ</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // ── AIストーリーモード ────────────────────────────────────
+  const renderStoryMode = () => {
+    const region = REGIONS.find(r => r.id === selectedRegion);
+    const list   = getRegionData(selectedRegion).filter(h => h.difficulty >= 1).slice(0, 12);
+    return (
+      <div>
+        <div className="heritage-list-header">
+          <button className="heritage-list-back" onClick={() => setLearningMode(null)}>← モード選択</button>
+          <div className="heritage-list-title">📖 AIストーリー — {region.label}</div>
+        </div>
+        <div className="card" style={{ marginBottom:12, fontSize:13, color:"var(--color-text-light)" }}>
+          各遺産の「🤖 AIストーリー」ボタンをタップすると、その遺産のストーリーが語られます。
+        </div>
         {list.map(h => (
-          <HeritageCard key={h.id} heritage={h} onClick={setSelectedHeritage} />
+          <div key={h.id} className="story-card">
+            {h.image && (
+              <img className="story-card-img" src={h.image} alt={h.name}
+                onError={e => { e.target.style.display="none"; }} />
+            )}
+            <div className="story-card-body">
+              <div className="story-card-name">{h.countryFlag} {h.name}</div>
+              <div className="story-card-sub">{h.country} · {h.year}年 · {h.type}</div>
+              <AIButton type="story" id={h.id} label="AIストーリー" delay={800} />
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -3472,13 +3686,14 @@ function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHis
 
   return (
     <div>
-      {!selectedRegion && renderRegionGrid()}
-      {selectedRegion  && renderHeritageList()}
+      {!selectedRegion                           && renderRegionGrid()}
+      {selectedRegion && !learningMode           && renderModeSelect()}
+      {selectedRegion && learningMode==="list"   && renderList()}
+      {selectedRegion && learningMode==="random" && renderQuizRunner("🎲 ランダムクイズ")}
+      {selectedRegion && learningMode==="hard"   && renderQuizRunner("🔥 難問チャレンジ")}
+      {selectedRegion && learningMode==="story"  && renderStoryMode()}
       {selectedHeritage && (
-        <HeritageDetailModal
-          heritage={selectedHeritage}
-          onClose={() => setSelectedHeritage(null)}
-        />
+        <HeritageDetailModal heritage={selectedHeritage} onClose={() => setSelectedHeritage(null)} />
       )}
     </div>
   );
