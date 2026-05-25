@@ -10,7 +10,7 @@
 フェーズ6:  ホーム画面            [✅] 完了
 フェーズ7:  ①基礎知識 前半       [✅] 完了
 フェーズ8:  ①基礎知識 後半       [✅] 完了
-フェーズ9:  ②地域別 前半         [ ] 未着手
+フェーズ9:  ②地域別 前半         [✅] 完了
 フェーズ10: ②地域別 後半         [ ] 未着手
 フェーズ11: ③時代別              [ ] 未着手
 フェーズ12: ④登録基準別          [ ] 未着手
@@ -18,7 +18,7 @@
 フェーズ14: AI機能統合            [ ] 未着手
 フェーズ15: 仕上げ・結合          [ ] 未着手
 ========================================
-最終更新: フェーズ8完了後
+最終更新: フェーズ9完了後
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -2167,6 +2167,56 @@ const STYLES = `
     padding: 8px 10px; margin-bottom: 8px; line-height: 1.5;
   }
 
+  /* ─── 地域別タブ ────────────────────────────── */
+  .region-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+  }
+  .region-card {
+    border-radius: var(--radius-md); padding: 16px 12px;
+    cursor: pointer; text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .region-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .region-card.done  { border-color: #2e8b57; }
+  .region-card-emoji { font-size: 28px; margin-bottom: 6px; }
+  .region-card-name  { font-size: 13px; font-weight: 700; }
+  .region-card-count { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  .region-card-done  {
+    position: absolute; top: 6px; right: 8px;
+    font-size: 12px; color: #2e8b57;
+  }
+
+  .heritage-list-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+  .heritage-list-back {
+    padding: 7px 12px; border-radius: 20px; border: none;
+    background: rgba(255,143,171,0.12); color: var(--color-primary);
+    font-family: var(--font-main); font-size: 12px; cursor: pointer;
+  }
+  .heritage-list-title { font-size: 16px; font-weight: 700; }
+
+  .heritage-detail-img {
+    width: 100%; height: 200px; object-fit: cover;
+    border-radius: var(--radius-md); margin-bottom: 14px;
+    background: var(--color-border); display: block;
+  }
+  .heritage-detail-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .heritage-detail-sub  { font-size: 13px; color: var(--color-text-light); margin-bottom: 12px; }
+  .heritage-detail-desc { font-size: 13px; line-height: 1.8; margin-bottom: 14px; }
+  .heritage-detail-tips { margin-bottom: 14px; }
+  .heritage-detail-tip  {
+    font-size: 12px; padding: 6px 10px;
+    background: rgba(255,209,102,0.15); border-radius: 6px;
+    margin-bottom: 4px; color: var(--color-text);
+  }
+  .modal-close-btn {
+    width: 100%; padding: 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border); background: var(--color-card-bg);
+    font-family: var(--font-main); font-size: 14px; cursor: pointer; margin-top: 8px;
+  }
+
   /* ─── レスポンシブ ──────────────────────────── */
   @media (max-width: 375px) {
     .tab-content { padding: 12px; }
@@ -3237,6 +3287,203 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
   );
 }
 
+// 📍 CHECKPOINT: フェーズ9 完了
+
+// ─── 地域定義 ─────────────────────────────────────────────
+const REGIONS = [
+  { id:"asia",         label:"アジア（日本含む）", emoji:"🌏", color:"rgba(255,143,171,0.15)",  border:"#FF8FAB" },
+  { id:"europe",       label:"ヨーロッパ",         emoji:"🏰", color:"rgba(168,216,234,0.2)",   border:"#A8D8EA" },
+  { id:"africa",       label:"アフリカ",            emoji:"🦁", color:"rgba(255,209,102,0.2)",   border:"#FFD166" },
+  { id:"middleEast",   label:"中東",               emoji:"🕌", color:"rgba(201,177,255,0.2)",   border:"#C9B1FF" },
+  { id:"northAmerica", label:"北米・中米",          emoji:"🗽", color:"rgba(181,234,215,0.2)",   border:"#B5EAD7" },
+  { id:"southAmerica", label:"南米",               emoji:"🦜", color:"rgba(255,180,120,0.2)",   border:"#FFB478" },
+  { id:"oceania",      label:"オセアニア",          emoji:"🦘", color:"rgba(160,220,180,0.2)",   border:"#A0DCB4" },
+];
+
+// ─── 遺産詳細モーダル ──────────────────────────────────────
+function HeritageDetailModal({ heritage, onClose }) {
+  if (!heritage) return null;
+  const { name, nameEn, country, countryFlag, year, type, criteria,
+          description, examTips, image, youtubeQuery } = heritage;
+  const typeClass = type === "文化遺産" ? "badge-culture"
+                  : type === "自然遺産" ? "badge-nature" : "badge-mixed";
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-panel" onClick={e => e.stopPropagation()}>
+        {image && (
+          <img
+            className="heritage-detail-img"
+            src={image}
+            alt={name}
+            onError={e => { e.target.style.display = "none"; }}
+          />
+        )}
+        <div className="heritage-detail-name">{countryFlag} {name}</div>
+        <div className="heritage-detail-sub">{nameEn} · {country} · {year}年登録</div>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
+          <span className={`badge ${typeClass}`}>{type}</span>
+          {criteria.map(c => (
+            <span key={c} className="badge badge-criteria">基準{c}</span>
+          ))}
+        </div>
+        <div className="heritage-detail-desc">{description}</div>
+        {examTips && examTips.length > 0 && (
+          <div className="heritage-detail-tips">
+            <div style={{ fontSize:12, fontWeight:700, color:"var(--color-text-light)", marginBottom:6 }}>📝 試験ポイント</div>
+            {examTips.map((t, i) => (
+              <div key={i} className="heritage-detail-tip">💡 {t}</div>
+            ))}
+          </div>
+        )}
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:8 }}>
+          <YouTubeButton query={youtubeQuery || name} />
+          <AIButton type="story" id={heritage.id} label="AIストーリー" delay={1000} />
+        </div>
+        <button className="modal-close-btn" onClick={onClose}>閉じる</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── ②地域別タブ ──────────────────────────────────────────
+function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHistory, setTestHistory }) {
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [selectedHeritage, setSelectedHeritage] = useState(null);
+  const [sortBy, setSortBy] = useState("year");
+
+  const prog = globalProgress.chiikibetsu;
+
+  const markDone = (regionId) => {
+    setGlobalProgress(prev => ({
+      ...prev,
+      chiikibetsu: { ...prev.chiikibetsu, [regionId]: true }
+    }));
+  };
+
+  const getRegionData = (regionId) => {
+    if (regionId === "asia") {
+      return [
+        ...japanHeritageData,
+        ...worldHeritageDataPart1.filter(h => h.region === "asia")
+      ];
+    }
+    return worldHeritageDataPart1.filter(h => h.region === regionId)
+      .concat(worldHeritageDataPart2.filter(h => h.region === regionId));
+  };
+
+  const sortedList = (list) => {
+    if (sortBy === "year")       return [...list].sort((a,b) => a.year - b.year);
+    if (sortBy === "difficulty") return [...list].sort((a,b) => b.difficulty - a.difficulty);
+    if (sortBy === "freq")       return [...list].sort((a,b) => {
+      const o = {"高":0,"中":1,"低":2};
+      return o[a.examFrequency] - o[b.examFrequency];
+    });
+    return list;
+  };
+
+  // ── 地域一覧ビュー ────────────────────────────────────────
+  const renderRegionGrid = () => (
+    <div>
+      <div className="section-title">🗺️ 地域別に学ぶ</div>
+      <div style={{ fontSize:13, color:"var(--color-text-light)", marginBottom:14 }}>
+        地域をタップして遺産一覧を表示。全 {allHeritageData.length} 件収録。
+      </div>
+      <div className="region-grid">
+        {REGIONS.map(r => {
+          const list = getRegionData(r.id);
+          const done = prog[r.id];
+          return (
+            <div
+              key={r.id}
+              className={`region-card${done ? " done" : ""}`}
+              style={{ background: r.color, borderColor: done ? "#2e8b57" : r.border }}
+              onClick={() => setSelectedRegion(r.id)}
+            >
+              {done && <span className="region-card-done">✅</span>}
+              <div className="region-card-emoji">{r.emoji}</div>
+              <div className="region-card-name">{r.label}</div>
+              <div className="region-card-count">{list.length}件</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 進捗サマリー */}
+      <div className="card">
+        <div className="card-title">📊 地域別進捗</div>
+        {REGIONS.map(r => {
+          const list = getRegionData(r.id);
+          return (
+            <div key={r.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 0", borderBottom:"1px solid var(--color-border)" }}>
+              <span style={{ width:20, textAlign:"center" }}>{r.emoji}</span>
+              <span style={{ flex:1, fontSize:13 }}>{r.label}</span>
+              <span style={{ fontSize:12, color:"var(--color-text-light)" }}>{list.length}件</span>
+              {prog[r.id] ? <span style={{ color:"#2e8b57", fontSize:12 }}>✅</span> : <span style={{ color:"var(--color-text-light)", fontSize:12 }}>未</span>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // ── 遺産リストビュー ──────────────────────────────────────
+  const renderHeritageList = () => {
+    const region = REGIONS.find(r => r.id === selectedRegion);
+    const list   = sortedList(getRegionData(selectedRegion));
+
+    return (
+      <div>
+        <div className="heritage-list-header">
+          <button className="heritage-list-back" onClick={() => setSelectedRegion(null)}>← 地域一覧</button>
+          <div>
+            <div className="heritage-list-title">{region.emoji} {region.label}</div>
+            <div style={{ fontSize:11, color:"var(--color-text-light)" }}>{list.length}件</div>
+          </div>
+        </div>
+
+        {/* 並び順 */}
+        <div style={{ display:"flex", gap:6, marginBottom:12, flexWrap:"wrap" }}>
+          {[["year","登録年順"],["difficulty","難易度順"],["freq","出題頻度順"]].map(([v,l]) => (
+            <button
+              key={v}
+              className={`section-tab-btn${sortBy===v?" active":""}`}
+              style={{ fontSize:11 }}
+              onClick={() => setSortBy(v)}
+            >
+              {l}
+            </button>
+          ))}
+          <button
+            className="btn btn-ghost"
+            style={{ fontSize:11, marginLeft:"auto" }}
+            onClick={() => markDone(selectedRegion)}
+          >
+            ✅ 完了にする
+          </button>
+        </div>
+
+        {/* 遺産カード一覧 */}
+        {list.map(h => (
+          <HeritageCard key={h.id} heritage={h} onClick={setSelectedHeritage} />
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      {!selectedRegion && renderRegionGrid()}
+      {selectedRegion  && renderHeritageList()}
+      {selectedHeritage && (
+        <HeritageDetailModal
+          heritage={selectedHeritage}
+          onClose={() => setSelectedHeritage(null)}
+        />
+      )}
+    </div>
+  );
+}
+
 // ─── プレースホルダータブ（後フェーズで実装） ──────────────
 function PlaceholderTab({ title }) {
   return (
@@ -3308,7 +3555,7 @@ export default function App() {
     switch (activeTab) {
       case "home":         return <HomeTab {...tabProps} />;
       case "kisochishiki": return <KisochishikiTab {...tabProps} />;
-      case "chiikibetsu":  return <PlaceholderTab title="②地域別タブ（フェーズ9・10で実装）" />;
+      case "chiikibetsu":  return <ChiikibetsuTab {...tabProps} />;
       case "jidaibetsu":   return <PlaceholderTab title="③時代別タブ（フェーズ11で実装）" />;
       case "kijunbetsu":   return <PlaceholderTab title="④登録基準別タブ（フェーズ12で実装）" />;
       case "nigatebun":    return <PlaceholderTab title="⑤苦手分析タブ（フェーズ13で実装）" />;
