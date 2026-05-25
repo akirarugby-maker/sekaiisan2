@@ -12,13 +12,13 @@
 フェーズ8:  ①基礎知識 後半       [✅] 完了
 フェーズ9:  ②地域別 前半         [✅] 完了
 フェーズ10: ②地域別 後半         [✅] 完了
-フェーズ11: ③時代別              [ ] 未着手
+フェーズ11: ③時代別              [✅] 完了
 フェーズ12: ④登録基準別          [ ] 未着手
 フェーズ13: ⑤苦手分析            [ ] 未着手
 フェーズ14: AI機能統合            [ ] 未着手
 フェーズ15: 仕上げ・結合          [ ] 未着手
 ========================================
-最終更新: フェーズ10完了後
+最終更新: フェーズ11完了後
 再開時はこのチェックリストを確認すること
 ========================================
 */
@@ -2250,6 +2250,35 @@ const STYLES = `
   .story-card-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
   .story-card-sub  { font-size: 11px; color: var(--color-text-light); margin-bottom: 8px; }
 
+  /* ─── 時代別タブ ────────────────────────────── */
+  .timeline-scroll {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;
+    scrollbar-width: none;
+  }
+  .timeline-scroll::-webkit-scrollbar { display: none; }
+  .timeline-era-btn {
+    flex-shrink: 0; padding: 10px 14px; border-radius: var(--radius-md);
+    border: 2px solid var(--color-border); background: var(--color-card-bg);
+    cursor: pointer; font-family: var(--font-main); text-align: center;
+    transition: all 0.18s; min-width: 76px;
+  }
+  .timeline-era-btn.active { border-color: var(--color-primary); background: rgba(255,143,171,0.1); }
+  .timeline-era-btn.done   { border-color: #2e8b57; }
+  .timeline-era-emoji  { font-size: 20px; margin-bottom: 2px; }
+  .timeline-era-label  { font-size: 12px; font-weight: 700; }
+  .timeline-era-period { font-size: 10px; color: var(--color-text-light); }
+
+  .era-header-card {
+    border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px; border: none;
+  }
+  .era-header-title  { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .era-header-period { font-size: 12px; opacity: 0.75; margin-bottom: 8px; }
+  .era-header-desc   { font-size: 13px; line-height: 1.7; }
+
+  .era-heritage-count {
+    font-size: 12px; color: var(--color-text-light); margin-bottom: 10px;
+  }
+
   /* ─── レスポンシブ ──────────────────────────── */
   @media (max-width: 375px) {
     .tab-content { padding: 12px; }
@@ -3700,6 +3729,236 @@ function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHis
 }
 
 // ─── プレースホルダータブ（後フェーズで実装） ──────────────
+// 📍 CHECKPOINT: フェーズ11 完了
+
+// ─── 時代定義 ─────────────────────────────────────────────
+const ERAS = [
+  { id:"ancient",     label:"古代",   period:"〜5世紀",        emoji:"🏛️",
+    color:"rgba(255,209,102,0.2)",  border:"#FFD166",
+    desc:"人類最古の文明の遺跡。メソポタミア・エジプト・ギリシャ・ローマ等の遺産。建造物の多くが宗教的・政治的権威の象徴として建てられた。",
+    keyPoints:["ピラミッド群（エジプト）","パルテノン神殿（ギリシャ）","ポンペイ（ローマ）","万里の長城の基礎（中国）"] },
+  { id:"classical",   label:"古典",   period:"5〜10世紀",      emoji:"🕌",
+    color:"rgba(255,143,171,0.15)", border:"#FF8FAB",
+    desc:"東アジアの仏教建築・イスラム建築の誕生・東ローマ帝国の最盛期。法隆寺・アンコール・ボロブドゥールはこの時代。",
+    keyPoints:["法隆寺（推古朝・7世紀）","ボロブドゥール（8世紀）","イスファハン（7世紀〜）","カーブ・アル・アンバール"] },
+  { id:"medieval",    label:"中世",   period:"10〜15世紀",     emoji:"⛪",
+    color:"rgba(168,216,234,0.2)",  border:"#A8D8EA",
+    desc:"ヨーロッパのゴシック大聖堂・アジアの寺院国家・アンコール王朝・十字軍時代の遺産。信仰と政治が交差した時代。",
+    keyPoints:["ケルン大聖堂（1248年着工）","シャルトル大聖堂","アンコール・ワット（12世紀）","白川郷（中世〜近世）"] },
+  { id:"earlyModern", label:"近世",   period:"15〜18世紀",     emoji:"🏯",
+    color:"rgba(201,177,255,0.2)",  border:"#C9B1FF",
+    desc:"ルネサンス・バロック・ムガル帝国・江戸時代。文化の爛熟期。ヴェルサイユ・タージ・マハル・姫路城はこの時代。",
+    keyPoints:["姫路城（1609年完成）","タージ・マハル（1631〜53年）","ヴェルサイユ宮殿（17世紀）","フィレンツェ（15世紀〜）"] },
+  { id:"modern",      label:"近代",   period:"18〜20世紀前半", emoji:"🏭",
+    color:"rgba(181,234,215,0.2)",  border:"#B5EAD7",
+    desc:"産業革命・世界大戦・植民地化と独立。富岡製糸場・明治産業革命遺産・原爆ドーム・アウシュビッツは近代遺産。",
+    keyPoints:["アイアンブリッジ（1779年）","富岡製糸場（1872年）","広島平和記念碑（1945年）","アウシュビッツ（1940〜45年）"] },
+  { id:"contemporary",label:"現代",   period:"1945年〜",       emoji:"🌆",
+    color:"rgba(255,180,120,0.2)",  border:"#FFB478",
+    desc:"核の脅威・環境問題・現代建築。シドニー・オペラハウス・ル・コルビュジエの建築作品群はこの時代の遺産。",
+    keyPoints:["シドニー・オペラハウス（1973年完成）","ブラジリア（1960年）","ル・コルビュジエ建築群（国際登録2016年）"] },
+];
+
+// ─── ③時代別タブ ──────────────────────────────────────────
+function JidaibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHistory, setTestHistory }) {
+  const [selectedEra,  setSelectedEra]  = useState("ancient");
+  const [quizMode,     setQuizMode]     = useState(false);
+  const [quizzes,      setQuizzes]      = useState([]);
+  const [quizIdx,      setQuizIdx]      = useState(0);
+  const [quizResults,  setQuizResults]  = useState([]);
+  const [showResult,   setShowResult]   = useState(false);
+
+  const prog = globalProgress.jidaibetsu;
+
+  const markDone = (eraId) => {
+    setGlobalProgress(prev => ({
+      ...prev,
+      jidaibetsu: { ...prev.jidaibetsu, [eraId]: true }
+    }));
+  };
+
+  const eraList = (eraId) => allHeritageData.filter(h => h.relatedEra === eraId);
+
+  // クイズ生成（時代判定・所属遺産識別）
+  const buildEraQuizzes = (eraId) => {
+    const era     = ERAS.find(e => e.id === eraId);
+    const correct = eraList(eraId);
+    const others  = ERAS.filter(e => e.id !== eraId);
+    const shuffle  = arr => [...arr].sort(() => Math.random() - 0.5);
+
+    const quizList = [];
+    // Q1〜5: この遺産はどの時代？
+    const sample = shuffle(correct).slice(0, 5);
+    sample.forEach(h => {
+      const wrongEras = shuffle(others).slice(0,3).map(e=>e.label+"（"+e.period+"）");
+      quizList.push(makeQuiz(
+        `「${h.name}」が属する時代は？`,
+        era.label+"（"+era.period+"）",
+        wrongEras,
+        `${h.name}は${h.country}にある${h.type}で、${era.label}（${era.period}）に建てられた。`
+      ));
+    });
+    // Q6〜10: この時代に属する遺産はどれ？
+    const otherSamples = others.flatMap(e => eraList(e.id)).filter(Boolean);
+    shuffle(correct).slice(0, 5).forEach((h, i) => {
+      const wrongs = shuffle(otherSamples).slice(i*3, i*3+3).map(x => x.name);
+      quizList.push(makeQuiz(
+        `次のうち「${era.label}」に属する遺産はどれ？`,
+        h.name,
+        wrongs,
+        `${h.name}は${h.country}の${h.type}で、${era.label}時代の遺産。`
+      ));
+    });
+    return shuffle(quizList).slice(0, 10);
+  };
+
+  const startQuiz = () => {
+    setQuizzes(buildEraQuizzes(selectedEra));
+    setQuizIdx(0); setQuizResults([]); setShowResult(false);
+    setQuizMode(true);
+  };
+
+  const handleQuizResult = (ok) => {
+    const updated = [...quizResults, ok];
+    setQuizResults(updated);
+    if (updated.length === quizzes.length) {
+      const era = ERAS.find(e => e.id === selectedEra);
+      setTestHistory(prev => [...prev, {
+        section: `③時代別 ${era?.label}`,
+        correct: updated.filter(Boolean).length, total: quizzes.length,
+        date: Date.now()
+      }]);
+      markDone(selectedEra);
+      setShowResult(true);
+    } else {
+      setTimeout(() => setQuizIdx(i => i + 1), 900);
+    }
+  };
+
+  const era     = ERAS.find(e => e.id === selectedEra);
+  const list    = eraList(selectedEra);
+  const score   = quizResults.filter(Boolean).length;
+  const pct     = quizzes.length ? Math.round(score / quizzes.length * 100) : 0;
+
+  if (quizMode) {
+    return (
+      <div>
+        <div className="heritage-list-header">
+          <button className="heritage-list-back" onClick={() => setQuizMode(false)}>← {era.label}に戻る</button>
+          <div className="heritage-list-title">{era.emoji} {era.label}クイズ</div>
+        </div>
+        <div className="card">
+          {!showResult ? (
+            <>
+              <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:8 }}>
+                問題 {Math.min(quizIdx+1, quizzes.length)} / {quizzes.length}
+                &nbsp;·&nbsp;正解 {quizResults.filter(Boolean).length}問
+              </div>
+              <div className="progress-bar-wrap" style={{ marginBottom:14 }}>
+                <div className="progress-bar-fill" style={{ width:`${(quizIdx/quizzes.length)*100}%` }} />
+              </div>
+              <QuizComponent key={quizIdx} quiz={quizzes[quizIdx]} onResult={handleQuizResult} />
+            </>
+          ) : (
+            <div className="quiz-result-wrap">
+              <div className="quiz-result-score">{score}/{quizzes.length}</div>
+              <div className="quiz-result-label">正解数 ({pct}%)</div>
+              <div className="quiz-result-msg">
+                {pct===100?"🎉 満点！":pct>=75?"👏 よくできました！":pct>=50?"📖 もう少し復習を":"💪 繰り返し練習しよう"}
+              </div>
+              <div style={{ marginTop:14, display:"flex", gap:8, justifyContent:"center" }}>
+                <button className="btn btn-primary" onClick={startQuiz}>もう一度</button>
+                <button className="btn btn-ghost" onClick={() => setQuizMode(false)}>遺産一覧に戻る</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* タイムラインスクロール */}
+      <div className="timeline-scroll">
+        {ERAS.map(e => (
+          <button
+            key={e.id}
+            className={`timeline-era-btn${selectedEra===e.id?" active":""}${prog[e.id]?" done":""}`}
+            style={selectedEra===e.id ? { background:e.color, borderColor:e.border } : {}}
+            onClick={() => { setSelectedEra(e.id); setQuizMode(false); }}
+          >
+            <div className="timeline-era-emoji">{e.emoji}</div>
+            <div className="timeline-era-label">{e.label}</div>
+            <div className="timeline-era-period">{e.period}</div>
+            {prog[e.id] && <div style={{ fontSize:10, color:"#2e8b57", marginTop:2 }}>✅</div>}
+          </button>
+        ))}
+      </div>
+
+      {/* 時代ヘッダーカード */}
+      <div className="era-header-card" style={{ background:era.color, border:`1px solid ${era.border}` }}>
+        <div className="era-header-title">{era.emoji} {era.label}時代</div>
+        <div className="era-header-period">⏱️ {era.period}</div>
+        <div className="era-header-desc">{era.desc}</div>
+        {era.keyPoints && (
+          <div style={{ marginTop:10 }}>
+            {era.keyPoints.map((p,i) => (
+              <div key={i} style={{ fontSize:12, padding:"3px 0", borderBottom:`1px solid ${era.border}40` }}>
+                📍 {p}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* アクションボタン */}
+      <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
+        <button className="btn btn-primary" onClick={startQuiz} disabled={list.length === 0}>
+          📝 {era.label}クイズ（{Math.min(10, list.length*2)}問）
+        </button>
+        <button className="btn btn-ghost" onClick={() => markDone(selectedEra)}>
+          {prog[selectedEra] ? "✅ 完了済み" : "完了にする"}
+        </button>
+      </div>
+
+      {/* 遺産一覧 */}
+      <div className="era-heritage-count">
+        {era.label}時代の遺産：{list.length}件
+        {list.length === 0 && " （データ準備中）"}
+      </div>
+      {list.map(h => (
+        <HeritageCard
+          key={h.id}
+          heritage={h}
+          onClick={(h) => {}}
+        />
+      ))}
+
+      {/* 全時代進捗 */}
+      <div className="card" style={{ marginTop:16 }}>
+        <div className="card-title">📊 時代別進捗</div>
+        {ERAS.map(e => {
+          const cnt = eraList(e.id).length;
+          return (
+            <div key={e.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 0", borderBottom:"1px solid var(--color-border)", cursor:"pointer" }}
+              onClick={() => setSelectedEra(e.id)}
+            >
+              <span style={{ width:24, textAlign:"center" }}>{e.emoji}</span>
+              <span style={{ flex:1, fontSize:13 }}>{e.label}<span style={{ fontSize:10, color:"var(--color-text-light)", marginLeft:6 }}>{e.period}</span></span>
+              <span style={{ fontSize:12, color:"var(--color-text-light)" }}>{cnt}件</span>
+              {prog[e.id]
+                ? <span style={{ color:"#2e8b57", fontSize:12 }}>✅</span>
+                : <span style={{ color:"var(--color-text-light)", fontSize:12 }}>未</span>
+              }
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function PlaceholderTab({ title }) {
   return (
     <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--color-text-light)" }}>
@@ -3771,7 +4030,7 @@ export default function App() {
       case "home":         return <HomeTab {...tabProps} />;
       case "kisochishiki": return <KisochishikiTab {...tabProps} />;
       case "chiikibetsu":  return <ChiikibetsuTab {...tabProps} />;
-      case "jidaibetsu":   return <PlaceholderTab title="③時代別タブ（フェーズ11で実装）" />;
+      case "jidaibetsu":   return <JidaibetsuTab {...tabProps} />;
       case "kijunbetsu":   return <PlaceholderTab title="④登録基準別タブ（フェーズ12で実装）" />;
       case "nigatebun":    return <PlaceholderTab title="⑤苦手分析タブ（フェーズ13で実装）" />;
       default:             return null;
