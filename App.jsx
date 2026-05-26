@@ -2581,8 +2581,16 @@ function QuizComponent({ quiz, onResult }) {
     if (answered) return;
     setSelected(idx);
     setAnswered(true);
-    const isCorrect = idx === quiz.correctIndex;
-    if (onResult) onResult(isCorrect);
+  };
+
+  const handleNext = () => {
+    const isCorrect = selected === quiz.correctIndex;
+    if (onResult) {
+      onResult(isCorrect);
+    } else {
+      setSelected(null);
+      setAnswered(false);
+    }
   };
 
   return (
@@ -2613,9 +2621,9 @@ function QuizComponent({ quiz, onResult }) {
           {quiz.explanation}
         </div>
       )}
-      {answered && onResult === undefined && (
-        <button className="quiz-next-btn" onClick={() => { setSelected(null); setAnswered(false); }}>
-          もう一度
+      {answered && (
+        <button className="quiz-next-btn" onClick={handleNext}>
+          {onResult ? "次の問題へ →" : "もう一度"}
         </button>
       )}
     </div>
@@ -3027,12 +3035,15 @@ const sectionEQuizzes = [
 function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHistory, setTestHistory }) {
   const [section, setSection] = useState("A");
   // Section A state
+  const [aMode, setAMode]           = useState("study");
+  const [openACard, setOpenACard]   = useState(null);
   const [quizIdx, setQuizIdx]       = useState(0);
   const [quizResults, setQuizResults] = useState([]);
   const [showResult, setShowResult] = useState(false);
   // Section B state
   const [openCriteria, setOpenCriteria] = useState(null);
   // Section C state
+  const [cMode, setCMode]           = useState("study");
   const [quizCIdx, setQuizCIdx]       = useState(0);
   const [quizCRes, setQuizCRes]       = useState([]);
   const [showResC, setShowResC]       = useState(false);
@@ -3071,7 +3082,7 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
       markDone("A");
       setShowResult(true);
     } else {
-      setTimeout(() => setQuizIdx(i => i + 1), 900);
+      setQuizIdx(i => i + 1);
     }
   };
 
@@ -3087,61 +3098,172 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
                   : pctA >= 50  ? "📖 もう少し復習しましょう"
                                 : "💪 繰り返し学習が大切です";
 
+  const sectionAStudyData = [
+    { id:"treaty", icon:"📜", title:"世界遺産条約とは",
+      subtitle:"1972年 パリ採択・1975年発効",
+      color:"rgba(255,143,171,0.1)",
+      points:[
+        "正式名称：「世界の文化遺産及び自然遺産の保護に関する条約」",
+        "1972年：パリのUNESCO総会で採択",
+        "1975年：条約発効（20カ国批准で発効）",
+        "日本は1992年に締約国加入（125番目）",
+        "2024年現在：195カ国が批准（ほぼ全世界）",
+      ],
+      tip:"採択(1972年)と発効(1975年)を混同しない！" },
+    { id:"whc", icon:"🏛️", title:"世界遺産委員会（WHC）",
+      subtitle:"年1回開催・21カ国で構成",
+      color:"rgba(168,216,234,0.1)",
+      points:[
+        "World Heritage Committee の略",
+        "ユネスコ総会で選出された21カ国の委員国で構成",
+        "毎年6〜7月に開催（第46回は2024年インド・ニューデリー）",
+        "世界遺産リストへの登録・危機遺産リスト掲載・登録抹消を決定",
+        "委員国の任期は最長6年（通常4年で輪番制）",
+      ],
+      tip:"委員国は21カ国。開催は年1回・夏が頻出！" },
+    { id:"advisory", icon:"🔬", title:"諮問機関（3機関）",
+      subtitle:"ICOMOS・IUCN・ICCROM",
+      color:"rgba(181,234,215,0.1)",
+      points:[
+        "ICOMOS（イコモス）：文化遺産の審査・勧告。本部：フランス・パリ",
+        "IUCN（アイユーシーエヌ）：自然遺産の審査・勧告。本部：スイス・グラン",
+        "ICCROM（イクロム）：文化財保護の研修・技術支援。本部：イタリア・ローマ",
+        "遺産の推薦書を審査し「登録勧告」「記載延期」「不登録」などの意見を出す",
+      ],
+      tip:"文化→ICOMOS、自然→IUCNが担当！ICCROMは人材育成機関。" },
+    { id:"ouv", icon:"⭐", title:"顕著な普遍的価値（OUV）",
+      subtitle:"登録の核心条件",
+      color:"rgba(255,209,102,0.1)",
+      points:[
+        "OUV = Outstanding Universal Value",
+        "世界遺産として登録されるための最も重要な概念",
+        "「国境を超えた人類共通の価値」を持つこと",
+        "真正性（Authenticity）：オリジナルの価値を保持",
+        "完全性（Integrity）：遺産の構成要素・プロセスが揃っている",
+        "保護管理（Protection & Management）：保全体制が整っている",
+      ],
+      tip:"OUV・真正性・完全性は三位一体で覚える！" },
+    { id:"numbers", icon:"📊", title:"重要数字まとめ",
+      subtitle:"頻出！数字は確実に暗記",
+      color:"rgba(201,177,255,0.1)",
+      points:[
+        "条約採択：1972年（パリ）",
+        "条約発効：1975年",
+        "世界遺産総数：1199件（2024年現在）",
+        "内訳：文化遺産933件 / 自然遺産227件 / 複合遺産39件",
+        "世界遺産委員会委員国：21カ国",
+        "日本の世界遺産：26件（文化遺産21件・自然遺産5件）",
+        "最初の登録取消：2007年 アラビアオリックス保護区（オマーン）",
+        "登録取消2例目：2009年 ドレスデン・エルベ渓谷（ドイツ）",
+        "登録取消3例目：2021年 リヴァプール海商都市（イギリス）",
+      ],
+      tip:"1972・1975・1199・21・26が最頻出の数字！" },
+    { id:"criteria_overview", icon:"🔢", title:"登録基準（10基準）の概要",
+      subtitle:"i〜vi：文化遺産　vii〜x：自然遺産",
+      color:"rgba(168,216,234,0.1)",
+      points:[
+        "基準i：人類の創造的傑作（芸術・建築の最高傑作）",
+        "基準ii：文化・文明間の重要な交流",
+        "基準iii：現存または消滅した文明の証拠",
+        "基準iv：建築・技術・景観の優れた例（最も多くの遺産が持つ）",
+        "基準v：人と環境の相互作用・文化的景観",
+        "基準vi：信仰・芸術・文学との関連（単独登録は例外的）",
+        "基準vii：自然美・景観の傑作",
+        "基準viii：地球の歴史・地形の形成過程",
+        "基準ix：生態系・生物の進化プロセス",
+        "基準x：生物多様性・絶滅危惧種の生息地",
+      ],
+      tip:"1件以上の基準を満たし、かつOUV・真正性・完全性が必要！" },
+    { id:"japan_overview", icon:"🗾", title:"日本の世界遺産",
+      subtitle:"26件（2024年）・最多登録国トップ10入り",
+      color:"rgba(255,143,171,0.1)",
+      points:[
+        "初の登録：1993年 法隆寺・姫路城（文化）＋屋久島・白神山地（自然）の4件同時",
+        "文化遺産：21件（法隆寺・姫路城・古都京都・白川郷 など）",
+        "自然遺産：5件（屋久島・白神山地・知床・小笠原・奄美・沖縄→4件）",
+        "最新登録：2024年 佐渡島の金山",
+        "推薦：文化庁（文化遺産）／環境省・林野庁（自然遺産）",
+        "日本は「複合遺産」がゼロ（文化または自然のどちらか）",
+      ],
+      tip:"初の4件同時登録（1993年）は必出！複合遺産ゼロも注意。" },
+  ];
+
   const renderSectionA = () => (
     <div>
       <div className="section-title">🏛️ セクションA：UNESCO・世界遺産条約の基礎</div>
-      <div className="card" style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 12, color: "var(--color-text-light)", marginBottom: 8 }}>
-          世界遺産検定2級で必須の基礎知識を確認します。全{sectionAQuizzes.length}問
-        </div>
-        {!showResult ? (
-          <>
-            <div style={{ fontSize: 12, color: "var(--color-text-light)", marginBottom: 12 }}>
-              問題 {Math.min(quizIdx + 1, sectionAQuizzes.length)} / {sectionAQuizzes.length}
-              &nbsp;·&nbsp;正解 {quizResults.filter(Boolean).length}問
-            </div>
-            <div className="progress-bar-wrap" style={{ marginBottom: 16 }}>
-              <div className="progress-bar-fill" style={{ width: `${(quizIdx / sectionAQuizzes.length) * 100}%` }} />
-            </div>
-            <QuizComponent
-              key={quizIdx}
-              quiz={sectionAQuizzes[quizIdx]}
-              onResult={handleQuizResult}
-            />
-          </>
-        ) : (
-          <div className="quiz-result-wrap">
-            <div className="quiz-result-score">{scoreA}/{sectionAQuizzes.length}</div>
-            <div className="quiz-result-label">正解数 ({pctA}%)</div>
-            <div className="quiz-result-msg">{resultMsg}</div>
-            <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
-              <button className="btn btn-primary" onClick={resetSectionA}>もう一度</button>
-              <button className="btn btn-ghost" onClick={() => setSection("B")}>次のセクションへ →</button>
-            </div>
-          </div>
-        )}
+      <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+        <button className={`section-tab-btn${aMode==="study"?" active":""}`} onClick={() => setAMode("study")}>📚 学習</button>
+        <button className={`section-tab-btn${aMode==="quiz"?" active":""}`} onClick={() => setAMode("quiz")}>📝 クイズ</button>
       </div>
 
-      {/* 重要数字まとめ */}
-      <div className="card">
-        <div className="card-title">📊 重要数字まとめ</div>
-        {[
-          ["条約採択", "1972年（パリ）"],
-          ["条約発効", "1975年"],
-          ["世界遺産総数", "1199件（2024年）"],
-          ["文化遺産",     "933件"],
-          ["自然遺産",     "227件"],
-          ["複合遺産",     "39件"],
-          ["委員国数",     "21カ国"],
-          ["日本の件数",   "26件（文化21・自然5）"],
-          ["初の取消",     "2007年アラビアオリックス保護区"],
-        ].map(([k, v]) => (
-          <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--color-border)", fontSize: 13 }}>
-            <span style={{ color: "var(--color-text-light)" }}>{k}</span>
-            <span style={{ fontWeight: 700 }}>{v}</span>
+      {aMode === "study" && (
+        <div>
+          {sectionAStudyData.map(s => (
+            <div key={s.id} className="criteria-card">
+              <div
+                className="criteria-card-header"
+                style={{ background: s.color }}
+                onClick={() => setOpenACard(prev => prev === s.id ? null : s.id)}
+              >
+                <div style={{ fontSize:24, width:36, textAlign:"center" }}>{s.icon}</div>
+                <div style={{ flex:1 }}>
+                  <div className="criteria-card-title">{s.title}</div>
+                  <div className="criteria-card-type">{s.subtitle}</div>
+                </div>
+                <div className="criteria-chevron">{openACard === s.id ? "▲" : "▼"}</div>
+              </div>
+              {openACard === s.id && (
+                <div className="criteria-card-body">
+                  <div className="criteria-tip" style={{ marginBottom:10 }}>💡 試験ポイント：{s.tip}</div>
+                  <ul style={{ margin:0, paddingLeft:16, fontSize:13, lineHeight:1.9 }}>
+                    {s.points.map((p, i) => <li key={i}>{p}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ))}
+          <div style={{ textAlign:"center", marginTop:16 }}>
+            <button className="btn btn-primary" onClick={() => { setAMode("quiz"); }}>
+              📝 クイズに挑戦する →
+            </button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {aMode === "quiz" && (
+        <div className="card">
+          <div style={{ fontSize: 12, color: "var(--color-text-light)", marginBottom: 8 }}>
+            世界遺産検定2級で必須の基礎知識を確認します。全{sectionAQuizzes.length}問
+          </div>
+          {!showResult ? (
+            <>
+              <div style={{ fontSize: 12, color: "var(--color-text-light)", marginBottom: 12 }}>
+                問題 {Math.min(quizIdx + 1, sectionAQuizzes.length)} / {sectionAQuizzes.length}
+                &nbsp;·&nbsp;正解 {quizResults.filter(Boolean).length}問
+              </div>
+              <div className="progress-bar-wrap" style={{ marginBottom: 16 }}>
+                <div className="progress-bar-fill" style={{ width: `${(quizIdx / sectionAQuizzes.length) * 100}%` }} />
+              </div>
+              <QuizComponent
+                key={quizIdx}
+                quiz={sectionAQuizzes[quizIdx]}
+                onResult={handleQuizResult}
+              />
+            </>
+          ) : (
+            <div className="quiz-result-wrap">
+              <div className="quiz-result-score">{scoreA}/{sectionAQuizzes.length}</div>
+              <div className="quiz-result-label">正解数 ({pctA}%)</div>
+              <div className="quiz-result-msg">{resultMsg}</div>
+              <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
+                <button className="btn btn-primary" onClick={resetSectionA}>もう一度</button>
+                <button className="btn btn-ghost" onClick={() => setAMode("study")}>📚 学習に戻る</button>
+                <button className="btn btn-ghost" onClick={() => setSection("B")}>次のセクションへ →</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -3222,9 +3344,94 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
       markDone("C");
       setShowResC(true);
     } else {
-      setTimeout(() => setQuizCIdx(i => i + 1), 900);
+      setQuizCIdx(i => i + 1);
     }
   };
+
+  const sectionCStudyData = [
+    { id:"cultural", icon:"🏛️", title:"文化遺産（Cultural Heritage）",
+      badge:"文化遺産", badgeColor:"#FF8FAB",
+      color:"rgba(255,143,171,0.08)",
+      definition:"人類が作り出した建造物・遺跡・芸術・歴史的地区などで、顕著な普遍的価値を持つもの",
+      criteria:"登録基準 i〜vi のいずれかを満たす（2024年：933件・全体の78%）",
+      keypoints:[
+        "「人間が作ったもの」がキーワード",
+        "建造物、遺跡群、歴史地区、文化的景観が含まれる",
+        "基準vi（信仰・文学との関連）のみでの登録は例外的",
+        "「負の遺産」（アウシュビッツ・広島）も文化遺産",
+      ],
+      examples:[
+        "法隆寺・姫路城・厳島神社（日本）",
+        "タージ・マハル・万里の長城・アンコール遺跡",
+        "ヴェルサイユ宮殿・アクロポリス・アウシュビッツ",
+      ] },
+    { id:"natural", icon:"🌿", title:"自然遺産（Natural Heritage）",
+      badge:"自然遺産", badgeColor:"#2e8b57",
+      color:"rgba(181,234,215,0.08)",
+      definition:"地球の歴史・生態系・生物多様性など、自然が作り出した顕著な普遍的価値を持つ地域",
+      criteria:"登録基準 vii〜x のいずれかを満たす（2024年：227件・全体の19%）",
+      keypoints:[
+        "「自然が作ったもの」がキーワード",
+        "地形・地質・生態系・生物多様性が主な対象",
+        "日本の自然遺産は5件（屋久島・白神山地・知床・小笠原・奄美沖縄）",
+        "絶滅危惧種の主要生息地（基準x）も対象",
+      ],
+      examples:[
+        "屋久島（vii・ix）・知床（ix・x）・小笠原（ix・x）",
+        "グランドキャニオン・ガラパゴス諸島・グレートバリアリーフ",
+        "イエローストーン・ヴィクトリア滝・ハロン湾",
+      ] },
+    { id:"mixed", icon:"🌏", title:"複合遺産（Mixed Heritage）",
+      badge:"複合遺産", badgeColor:"#6a4ca8",
+      color:"rgba(106,76,168,0.07)",
+      definition:"文化遺産と自然遺産の両方の基準を同時に満たす遺産",
+      criteria:"基準i〜vi（文化）と vii〜x（自然）の両方を少なくとも1つずつ満たす（2024年：39件・全体の3%）",
+      keypoints:[
+        "最も件数が少ない（全体の約3%）",
+        "日本には複合遺産が0件（文化か自然どちらか）",
+        "富士山は文化遺産（iii・vi）に登録。自然遺産ではない！",
+        "ペルーのマチュ・ピチュは複合遺産の代表例",
+      ],
+      examples:[
+        "マチュ・ピチュ（ペルー）",
+        "ウルル・カタジュタ国立公園（オーストラリア）",
+        "ピレネー山脈－ペルデュ山（フランス・スペイン）",
+        "泰山（中国）・黄山（中国）",
+      ] },
+    { id:"cultural_landscape", icon:"🏞️", title:"文化的景観（Cultural Landscape）",
+      badge:"特別カテゴリ", badgeColor:"#f59e0b",
+      color:"rgba(255,209,102,0.08)",
+      definition:"人間と自然の相互作用によって形成された景観。文化遺産の一形態",
+      criteria:"登録基準 v または vi に基づき登録される",
+      keypoints:[
+        "1992年：世界遺産委員会が「文化的景観」カテゴリを導入",
+        "「人と自然が共に作った景観」がキーワード",
+        "棚田・農村景観・宗教的景観などが対象",
+        "白川郷の合掌造り集落も文化的景観の要素を持つ",
+      ],
+      examples:[
+        "トンガリロ国立公園（ニュージーランド）：初の文化的景観",
+        "棚田（フィリピンのコルディリェーラ）",
+        "ドナウ流域のウィーン・ブダペスト",
+      ] },
+    { id:"serial", icon:"🔗", title:"シリアル遺産・トランスバウンダリー遺産",
+      badge:"登録形態", badgeColor:"#A8D8EA",
+      color:"rgba(168,216,234,0.08)",
+      definition:"複数の構成要素・複数の国にまたがる世界遺産の登録形態",
+      criteria:"一連の価値を持つ複数の場所をまとめて登録",
+      keypoints:[
+        "シリアル遺産：離れた複数の構成資産を一つの遺産として登録",
+        "例：富士山（富士山本体＋周辺25資産）・法隆寺地域の仏教建造物群",
+        "トランスバウンダリー遺産：国境をまたぐ複数国共同登録",
+        "例：ピレネー山脈（仏・西）、ワジャ国立公園（西アフリカ5カ国）",
+        "越境遺産（トランスバウンダリー）は国際協力の証",
+      ],
+      examples:[
+        "ル・コルビュジエの建築作品（7カ国17資産）",
+        "アルプス山脈周辺の先史時代杭上住居群（6カ国）",
+        "知床は日本固有（他国と越境なし）",
+      ] },
+  ];
 
   const renderSectionC = () => {
     const scoreC = quizCRes.filter(Boolean).length;
@@ -3232,49 +3439,87 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
     return (
       <div>
         <div className="section-title">🏷️ セクションC：遺産の種別分類</div>
-        <div className="card" style={{ marginBottom: 12, fontSize: 13 }}>
-          文化遺産・自然遺産・複合遺産を見分けるクイズ。全{sectionCQuizzes.length}問
+        <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+          <button className={`section-tab-btn${cMode==="study"?" active":""}`} onClick={() => setCMode("study")}>📚 学習</button>
+          <button className={`section-tab-btn${cMode==="quiz"?" active":""}`} onClick={() => setCMode("quiz")}>📝 クイズ</button>
         </div>
-        <div className="card">
-          {!showResC ? (
-            <>
-              <div style={{ fontSize: 12, color: "var(--color-text-light)", marginBottom: 8 }}>
-                問題 {Math.min(quizCIdx+1, sectionCQuizzes.length)} / {sectionCQuizzes.length}
+
+        {cMode === "study" && (
+          <div>
+            {sectionCStudyData.map(s => (
+              <div key={s.id} className="criteria-card" style={{ marginBottom:10 }}>
+                <div style={{ background:s.color, padding:"12px 14px", borderRadius:"10px 10px 0 0" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <div style={{ fontSize:26 }}>{s.icon}</div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span className="badge" style={{ background:`${s.badgeColor}20`, color:s.badgeColor, fontSize:11 }}>{s.badge}</span>
+                      </div>
+                      <div style={{ fontWeight:700, fontSize:15, marginTop:4 }}>{s.title}</div>
+                    </div>
+                  </div>
+                  <div style={{ marginTop:8, fontSize:13, lineHeight:1.6, color:"var(--color-text-light)" }}>
+                    {s.definition}
+                  </div>
+                  <div style={{ marginTop:6, fontSize:12, background:"rgba(255,255,255,0.15)", padding:"4px 8px", borderRadius:6 }}>
+                    📌 {s.criteria}
+                  </div>
+                </div>
+                <div className="criteria-card-body">
+                  <div style={{ marginBottom:8 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"var(--color-text-light)", marginBottom:4 }}>覚え方のポイント</div>
+                    <ul style={{ margin:0, paddingLeft:16, fontSize:13, lineHeight:1.8 }}>
+                      {s.keypoints.map((p, i) => <li key={i}>{p}</li>)}
+                    </ul>
+                  </div>
+                  <div style={{ marginBottom:6, fontSize:12, fontWeight:600, color:"var(--color-text-light)" }}>代表例</div>
+                  <div className="criteria-heritages">
+                    {s.examples.map((e, i) => <span key={i} className="criteria-heritage-tag">{e}</span>)}
+                  </div>
+                </div>
               </div>
-              <div className="progress-bar-wrap" style={{ marginBottom: 14 }}>
-                <div className="progress-bar-fill" style={{ width: `${(quizCIdx / sectionCQuizzes.length) * 100}%` }} />
-              </div>
-              <QuizComponent key={quizCIdx} quiz={sectionCQuizzes[quizCIdx]} onResult={handleCResult} />
-            </>
-          ) : (
-            <div className="quiz-result-wrap">
-              <div className="quiz-result-score">{scoreC}/{sectionCQuizzes.length}</div>
-              <div className="quiz-result-label">正解数 ({pctC}%)</div>
-              <div className="quiz-result-msg">
-                {pctC===100?"🎉 満点！": pctC>=70?"👏 よくできました！": "📖 もう少し復習しましょう"}
-              </div>
-              <div style={{ marginTop:14, display:"flex", gap:8, justifyContent:"center" }}>
-                <button className="btn btn-primary" onClick={() => { setQuizCIdx(0); setQuizCRes([]); setShowResC(false); }}>
-                  もう一度
-                </button>
-                <button className="btn btn-ghost" onClick={() => setSection("D")}>次へ →</button>
-              </div>
+            ))}
+            <div style={{ textAlign:"center", marginTop:16 }}>
+              <button className="btn btn-primary" onClick={() => setCMode("quiz")}>
+                📝 クイズに挑戦する →
+              </button>
             </div>
-          )}
-        </div>
-        <div className="card">
-          <div className="card-title">📌 種別の覚え方</div>
-          {[
-            ["文化遺産", "#FF8FAB", "建築・遺跡・芸術・信仰・産業 → 人間が作ったもの"],
-            ["自然遺産", "#2e8b57", "自然美・地形・生態系・生物多様性 → 自然が作ったもの"],
-            ["複合遺産", "#6a4ca8", "文化基準(i〜vi) + 自然基準(vii〜x) の両方を満たす"],
-          ].map(([t, c, d]) => (
-            <div key={t} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:"1px solid var(--color-border)", alignItems:"flex-start" }}>
-              <span className="badge" style={{ background:`${c}20`, color:c, whiteSpace:"nowrap", marginTop:2 }}>{t}</span>
-              <span style={{ fontSize:13, lineHeight:1.5 }}>{d}</span>
+          </div>
+        )}
+
+        {cMode === "quiz" && (
+          <div className="card">
+            <div style={{ fontSize: 13, marginBottom: 8 }}>
+              文化遺産・自然遺産・複合遺産を見分けるクイズ。全{sectionCQuizzes.length}問
             </div>
-          ))}
-        </div>
+            {!showResC ? (
+              <>
+                <div style={{ fontSize: 12, color: "var(--color-text-light)", marginBottom: 8 }}>
+                  問題 {Math.min(quizCIdx+1, sectionCQuizzes.length)} / {sectionCQuizzes.length}
+                </div>
+                <div className="progress-bar-wrap" style={{ marginBottom: 14 }}>
+                  <div className="progress-bar-fill" style={{ width: `${(quizCIdx / sectionCQuizzes.length) * 100}%` }} />
+                </div>
+                <QuizComponent key={quizCIdx} quiz={sectionCQuizzes[quizCIdx]} onResult={handleCResult} />
+              </>
+            ) : (
+              <div className="quiz-result-wrap">
+                <div className="quiz-result-score">{scoreC}/{sectionCQuizzes.length}</div>
+                <div className="quiz-result-label">正解数 ({pctC}%)</div>
+                <div className="quiz-result-msg">
+                  {pctC===100?"🎉 満点！": pctC>=70?"👏 よくできました！": "📖 もう少し復習しましょう"}
+                </div>
+                <div style={{ marginTop:14, display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
+                  <button className="btn btn-primary" onClick={() => { setQuizCIdx(0); setQuizCRes([]); setShowResC(false); }}>
+                    もう一度
+                  </button>
+                  <button className="btn btn-ghost" onClick={() => setCMode("study")}>📚 学習に戻る</button>
+                  <button className="btn btn-ghost" onClick={() => setSection("D")}>次へ →</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -3299,7 +3544,7 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
       markDone("D");
       setShowTrickRes(true);
     } else {
-      setTimeout(() => setTrickIdx(i => i + 1), 900);
+      setTrickIdx(i => i + 1);
     }
   };
 
@@ -3389,7 +3634,7 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
       markDone("E");
       setShowResE(true);
     } else {
-      setTimeout(() => setQuizEIdx(i => i + 1), 900);
+      setQuizEIdx(i => i + 1);
     }
   };
 
@@ -3676,7 +3921,7 @@ function ChiikibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHis
       markDone(selectedRegion);
       setModeShowResult(true);
     } else {
-      setTimeout(() => setModeIdx(i => i + 1), 900);
+      setModeIdx(i => i + 1);
     }
   };
 
@@ -3988,7 +4233,7 @@ function JidaibetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHist
       markDone(selectedEra);
       setShowResult(true);
     } else {
-      setTimeout(() => setQuizIdx(i => i + 1), 900);
+      setQuizIdx(i => i + 1);
     }
   };
 
@@ -4186,7 +4431,7 @@ function KijunbetsuTab({ onNavigate, globalProgress, setGlobalProgress, testHist
       }]);
       setShowResult(true);
     } else {
-      setTimeout(() => setQuizIdx(i => i + 1), 900);
+      setQuizIdx(i => i + 1);
     }
   };
 
@@ -4657,7 +4902,7 @@ function MockExam({ onClose, setTestHistory }) {
       }]);
       setFinished(true); setScreen("result");
     } else {
-      setTimeout(() => setIdx(i => i + 1), 900);
+      setIdx(i => i + 1);
     }
   };
 
