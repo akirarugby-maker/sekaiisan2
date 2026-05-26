@@ -1562,6 +1562,50 @@ const criteriaData = [
     examTips:["「生物多様性・希少種の生息地」がキーワード","奄美・沖縄はxのみ","知床はix・x"] }
 ];
 
+// ─── セクションBクイズ（登録基準） ───────────────────────────
+const sectionBQuizzes = [
+  { question:"登録基準のうち「文化遺産のみ」に使われる基準として正しいものは？",
+    choices:["i〜vi","i〜x","vii〜x","i〜viii"],
+    correctIndex:0,
+    explanation:"i〜viが文化遺産基準、vii〜xが自然遺産基準。複合遺産は両方を持つ。" },
+  { question:"「人類の創造的傑作」を示す登録基準は？",
+    choices:["基準ii","基準iii","基準i","基準iv"],
+    correctIndex:2,
+    explanation:"基準iは「人間の創造的才能の傑作」。姫路城・タージ・マハルが代表例。" },
+  { question:"最も多くの遺産が持つ登録基準はどれ？",
+    choices:["基準i","基準ii","基準vi","基準iv"],
+    correctIndex:3,
+    explanation:"基準iv「建築・技術の傑作」は最も多くの遺産が持つ。城郭・大聖堂に多い。" },
+  { question:"「単独での登録が例外的」とされる基準は？",
+    choices:["基準i","基準iv","基準vi","基準vii"],
+    correctIndex:2,
+    explanation:"基準vi「信仰・芸術・文学との関連」は補完的基準。広島・ゴレ島は例外。" },
+  { question:"白神山地が持つ登録基準はどれ？",
+    choices:["基準vii","基準viii","基準ix","基準x"],
+    correctIndex:2,
+    explanation:"白神山地は基準ixのみ（世界最大級のブナ原生林の生態系プロセス）。日本自然遺産で最少。" },
+  { question:"屋久島の登録基準として正しいものは？",
+    choices:["vii・viii","vii・ix","viii・ix","ix・x"],
+    correctIndex:1,
+    explanation:"屋久島はvii（自然美）とix（生態系プロセス）。縄文杉の森が評価された。" },
+  { question:"ガラパゴス諸島が持つ登録基準の数は？",
+    choices:["2つ（vii・ix）","3つ（vii・viii・ix）","4つ（vii・viii・ix・x）","5つ"],
+    correctIndex:2,
+    explanation:"ガラパゴスはvii・viii・ix・xの4基準。生物進化の殿堂として最多基準を持つ。" },
+  { question:"「人と環境の相互作用による文化的景観」を示す基準は？",
+    choices:["基準iii","基準iv","基準v","基準vi"],
+    correctIndex:2,
+    explanation:"基準v「土地利用・文化的景観」。白川郷の合掌造り（豪雪への適応）が代表例。" },
+  { question:"知床が持つ登録基準として正しいものは？",
+    choices:["vii・viii","viii・ix","ix・x","vii・x"],
+    correctIndex:2,
+    explanation:"知床はix（生態系プロセス）とx（生物多様性・絶滅危惧種）。流氷生態系が評価。" },
+  { question:"「地球の歴史の主要段階を示す地形・地質」を表す基準は？",
+    choices:["基準vii","基準viii","基準ix","基準x"],
+    correctIndex:1,
+    explanation:"基準viii「地質・地形の形成過程」。グランドキャニオン・ガラパゴスが代表例。" },
+];
+
 // ─── 建築様式データ（8種） ────────────────────────────────
 const architectureStyles = [
   { id:"romanesque", name:"ロマネスク様式", era:"11〜12世紀",
@@ -3041,7 +3085,11 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
   const [quizResults, setQuizResults] = useState([]);
   const [showResult, setShowResult] = useState(false);
   // Section B state
+  const [bMode, setBMode]           = useState("matrix");
   const [openCriteria, setOpenCriteria] = useState(null);
+  const [quizBIdx, setQuizBIdx]     = useState(0);
+  const [quizBRes, setQuizBRes]     = useState([]);
+  const [showResB, setShowResB]     = useState(false);
   // Section C state
   const [cMode, setCMode]           = useState("study");
   const [quizCIdx, setQuizCIdx]       = useState(0);
@@ -3268,68 +3316,237 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
   );
 
   // ── Section B: 登録基準 i〜x ────────────────────────────
-  const handleCriteriaView = (id) => {
-    setOpenCriteria(prev => prev === id ? null : id);
-    const viewed = criteriaData.filter(c => c.id !== id || openCriteria !== c.id).length;
-    if (criteriaData.every(c => c.id === id || openCriteria === c.id)) markDone("B");
+  const handleBResult = (ok) => {
+    const updated = [...quizBRes, ok];
+    setQuizBRes(updated);
+    if (updated.length === sectionBQuizzes.length) {
+      setTestHistory(prev => [...prev, {
+        section: "①基礎知識 B：登録基準",
+        correct: updated.filter(Boolean).length, total: sectionBQuizzes.length,
+        date: Date.now()
+      }]);
+      markDone("B");
+      setShowResB(true);
+    } else {
+      setQuizBIdx(i => i + 1);
+    }
   };
 
-  const renderSectionB = () => (
-    <div>
-      <div className="section-title">⭐ セクションB：登録基準 i〜x</div>
-      <div className="card" style={{ marginBottom: 12, fontSize: 13, lineHeight: 1.6 }}>
-        登録基準は<strong>i〜vi が文化遺産</strong>、<strong>vii〜x が自然遺産</strong>。
-        複合遺産は両方の基準を持ちます。各カードをタップして詳細を確認しましょう。
-        <div style={{ marginTop: 8 }}>
-          <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={() => markDone("B")}>
-            ✅ このセクション完了
-          </button>
-        </div>
-      </div>
+  const renderSectionB = () => {
+    const scoreB = quizBRes.filter(Boolean).length;
+    const pctB   = sectionBQuizzes.length ? Math.round(scoreB / sectionBQuizzes.length * 100) : 0;
 
-      {criteriaData.map(c => {
-        const isOpen = openCriteria === c.id;
-        const bgColor = c.type === "文化" ? "rgba(255,143,171,0.08)" : "rgba(181,234,215,0.12)";
-        const numColor = c.color;
-        return (
-          <div key={c.id} className="criteria-card">
-            <div
-              className="criteria-card-header"
-              style={{ background: bgColor }}
-              onClick={() => handleCriteriaView(c.id)}
-            >
-              <div className="criteria-num" style={{ background: numColor }}>{c.id}</div>
-              <div style={{ flex: 1 }}>
-                <div className="criteria-card-title">{c.label}</div>
-                <div className="criteria-card-type">{c.type}遺産基準</div>
-              </div>
-              <div className="criteria-chevron">{isOpen ? "▲" : "▼"}</div>
+    // マトリクス用データ
+    const cultural = criteriaData.filter(c => c.type === "文化");
+    const natural  = criteriaData.filter(c => c.type === "自然");
+
+    return (
+      <div>
+        <div className="section-title">⭐ セクションB：登録基準 i〜x</div>
+        <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
+          <button className={`section-tab-btn${bMode==="matrix"?" active":""}`} onClick={() => setBMode("matrix")}>📊 マトリクス</button>
+          <button className={`section-tab-btn${bMode==="cards"?" active":""}`}  onClick={() => setBMode("cards")}>📚 詳細カード</button>
+          <button className={`section-tab-btn${bMode==="quiz"?" active":""}`}   onClick={() => setBMode("quiz")}>📝 クイズ</button>
+        </div>
+
+        {/* ── マトリクスビュー ── */}
+        {bMode === "matrix" && (
+          <div>
+            <div className="card" style={{ marginBottom:12, fontSize:13, lineHeight:1.7 }}>
+              登録基準は全10種。<strong style={{ color:"#FF8FAB" }}>i〜vi が文化遺産</strong>、
+              <strong style={{ color:"#2e8b57" }}> vii〜x が自然遺産</strong>。
+              複合遺産は両方の基準を持ちます。
             </div>
-            {isOpen && (
-              <div className="criteria-card-body">
-                <div className="criteria-desc">{c.description}</div>
-                {c.examTips && c.examTips.map((t, i) => (
-                  <div key={i} className="criteria-tip">💡 {t}</div>
-                ))}
-                <div style={{ marginBottom: 6, fontSize: 12, fontWeight: 600, color: "var(--color-text-light)" }}>代表的な遺産</div>
-                <div className="criteria-heritages">
-                  {c.heritages.map(h => (
-                    <span key={h} className="criteria-heritage-tag">{h}</span>
-                  ))}
-                </div>
-                {c.comparePair && (
-                  <div style={{ fontSize: 12, background: "rgba(255,209,102,0.15)", padding: "8px 10px", borderRadius: "6px", marginBottom: 10 }}>
-                    🔍 比較ポイント：<strong>{c.comparePair.a}</strong> vs <strong>{c.comparePair.b}</strong>
+
+            {/* 文化遺産基準 */}
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#FF8FAB", marginBottom:8, paddingLeft:4 }}>
+                🏛️ 文化遺産基準 (i〜vi)
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                {cultural.map(c => (
+                  <div
+                    key={c.id}
+                    onClick={() => { setBMode("cards"); setOpenCriteria(c.id); }}
+                    style={{
+                      background:"rgba(255,143,171,0.08)",
+                      border:"1px solid rgba(255,143,171,0.25)",
+                      borderRadius:10,
+                      padding:"10px 12px",
+                      cursor:"pointer",
+                      transition:"all 0.15s",
+                    }}
+                  >
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                      <span style={{
+                        background:c.color, color:"#fff", fontWeight:700,
+                        fontSize:13, width:28, height:28, borderRadius:"50%",
+                        display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0
+                      }}>{c.id}</span>
+                      <span style={{ fontSize:12, fontWeight:700, lineHeight:1.3 }}>{c.label}</span>
+                    </div>
+                    <div style={{ fontSize:11, color:"var(--color-text-light)", lineHeight:1.5 }}>
+                      {c.heritages.slice(0,2).join("・")}
+                    </div>
+                    {c.id === "iv" && <div style={{ fontSize:10, color:"#f59e0b", marginTop:3 }}>★ 最多基準</div>}
+                    {c.id === "vi" && <div style={{ fontSize:10, color:"#6366f1", marginTop:3 }}>⚠️ 単独登録は例外的</div>}
+                    <div style={{ fontSize:10, color:"#A8D8EA", marginTop:3 }}>→ 詳細を見る</div>
                   </div>
-                )}
-                <AIButton type="explanation" id={c.id} label={`基準${c.id}をAI解説`} delay={700} />
+                ))}
+              </div>
+            </div>
+
+            {/* 自然遺産基準 */}
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#2e8b57", marginBottom:8, paddingLeft:4 }}>
+                🌿 自然遺産基準 (vii〜x)
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                {natural.map(c => (
+                  <div
+                    key={c.id}
+                    onClick={() => { setBMode("cards"); setOpenCriteria(c.id); }}
+                    style={{
+                      background:"rgba(181,234,215,0.1)",
+                      border:"1px solid rgba(181,234,215,0.35)",
+                      borderRadius:10,
+                      padding:"10px 12px",
+                      cursor:"pointer",
+                      transition:"all 0.15s",
+                    }}
+                  >
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                      <span style={{
+                        background:c.color, color:"#fff", fontWeight:700,
+                        fontSize:13, width:28, height:28, borderRadius:"50%",
+                        display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0
+                      }}>{c.id}</span>
+                      <span style={{ fontSize:12, fontWeight:700, lineHeight:1.3 }}>{c.label}</span>
+                    </div>
+                    <div style={{ fontSize:11, color:"var(--color-text-light)", lineHeight:1.5 }}>
+                      {c.heritages.slice(0,2).join("・")}
+                    </div>
+                    <div style={{ fontSize:10, color:"#A8D8EA", marginTop:3 }}>→ 詳細を見る</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 比較早見表 */}
+            <div className="card">
+              <div className="card-title">🔍 試験頻出 比較早見表</div>
+              {[
+                ["白川郷","基準v（人と環境の景観）","合掌造り＝豪雪への適応"],
+                ["富士山","基準iii・vi（文化遺産）","自然遺産ではない！"],
+                ["ガラパゴス","基準vii・viii・ix・x","4基準で日本より多い"],
+                ["白神山地","基準ixのみ","日本自然遺産で最少"],
+                ["広島・ゴレ島","基準viのみ","例外的な単独基準vi登録"],
+                ["姫路城","基準i・iv","「i」は芸術的傑作の証"],
+              ].map(([name, criteria, note]) => (
+                <div key={name} style={{ display:"flex", gap:8, padding:"7px 0", borderBottom:"1px solid var(--color-border)", alignItems:"flex-start" }}>
+                  <span style={{ fontWeight:700, fontSize:13, minWidth:72 }}>{name}</span>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:12, color:"var(--color-text)" }}>{criteria}</div>
+                    <div style={{ fontSize:11, color:"var(--color-text-light)" }}>{note}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ textAlign:"center", marginTop:16 }}>
+              <button className="btn btn-primary" onClick={() => setBMode("quiz")}>
+                📝 クイズに挑戦する →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── 詳細カードビュー ── */}
+        {bMode === "cards" && (
+          <div>
+            {criteriaData.map(c => {
+              const isOpen = openCriteria === c.id;
+              const bgColor = c.type === "文化" ? "rgba(255,143,171,0.08)" : "rgba(181,234,215,0.12)";
+              return (
+                <div key={c.id} className="criteria-card">
+                  <div
+                    className="criteria-card-header"
+                    style={{ background: bgColor }}
+                    onClick={() => setOpenCriteria(prev => prev === c.id ? null : c.id)}
+                  >
+                    <div className="criteria-num" style={{ background: c.color }}>{c.id}</div>
+                    <div style={{ flex: 1 }}>
+                      <div className="criteria-card-title">{c.label}</div>
+                      <div className="criteria-card-type">{c.type}遺産基準</div>
+                    </div>
+                    <div className="criteria-chevron">{isOpen ? "▲" : "▼"}</div>
+                  </div>
+                  {isOpen && (
+                    <div className="criteria-card-body">
+                      <div className="criteria-desc">{c.description}</div>
+                      {c.examTips && c.examTips.map((t, i) => (
+                        <div key={i} className="criteria-tip">💡 {t}</div>
+                      ))}
+                      <div style={{ marginBottom: 6, fontSize: 12, fontWeight: 600, color: "var(--color-text-light)" }}>代表的な遺産</div>
+                      <div className="criteria-heritages">
+                        {c.heritages.map(h => (
+                          <span key={h} className="criteria-heritage-tag">{h}</span>
+                        ))}
+                      </div>
+                      {c.comparePair && (
+                        <div style={{ fontSize: 12, background: "rgba(255,209,102,0.15)", padding: "8px 10px", borderRadius: "6px", marginBottom: 10 }}>
+                          🔍 比較ポイント：<strong>{c.comparePair.a}</strong> vs <strong>{c.comparePair.b}</strong>
+                        </div>
+                      )}
+                      <AIButton type="explanation" id={c.id} label={`基準${c.id}をAI解説`} delay={700} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <div style={{ textAlign:"center", marginTop:16 }}>
+              <button className="btn btn-primary" onClick={() => setBMode("quiz")}>
+                📝 クイズに挑戦する →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── クイズビュー ── */}
+        {bMode === "quiz" && (
+          <div className="card">
+            <div className="card-title">📝 登録基準クイズ（全{sectionBQuizzes.length}問）</div>
+            {!showResB ? (
+              <>
+                <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:8 }}>
+                  問題 {Math.min(quizBIdx+1, sectionBQuizzes.length)} / {sectionBQuizzes.length}
+                </div>
+                <div className="progress-bar-wrap" style={{ marginBottom:14 }}>
+                  <div className="progress-bar-fill" style={{ width:`${(quizBIdx/sectionBQuizzes.length)*100}%` }} />
+                </div>
+                <QuizComponent key={quizBIdx} quiz={sectionBQuizzes[quizBIdx]} onResult={handleBResult} />
+              </>
+            ) : (
+              <div className="quiz-result-wrap">
+                <div className="quiz-result-score">{scoreB}/{sectionBQuizzes.length}</div>
+                <div className="quiz-result-label">正解数 ({pctB}%)</div>
+                <div className="quiz-result-msg">
+                  {pctB===100?"🎉 登録基準マスター！": pctB>=70?"👏 よくできました！": "📖 マトリクスで再確認しよう"}
+                </div>
+                <div style={{ marginTop:14, display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
+                  <button className="btn btn-primary" onClick={() => { setQuizBIdx(0); setQuizBRes([]); setShowResB(false); }}>
+                    もう一度
+                  </button>
+                  <button className="btn btn-ghost" onClick={() => setBMode("matrix")}>📊 マトリクスに戻る</button>
+                  <button className="btn btn-ghost" onClick={() => setSection("C")}>次へ →</button>
+                </div>
               </div>
             )}
           </div>
-        );
-      })}
-    </div>
-  );
+        )}
+      </div>
+    );
+  };
 
   // ── Section C: 遺産の分類クイズ ──────────────────────────
   const handleCResult = (ok) => {
