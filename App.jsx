@@ -23,13 +23,14 @@
 ========================================
 */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Search, Star, MapPin, Clock, BookOpen, BarChart2,
   Home, Globe, Calendar, ChevronRight, ChevronLeft,
   X, Check, RefreshCw, Youtube, Brain, Zap, Award,
-  TrendingUp, AlertTriangle, Filter
+  TrendingUp, AlertTriangle, Filter, Map
 } from "lucide-react";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 
 // ============================================================
 // 📍 CHECKPOINT: フェーズ1 完了
@@ -2494,6 +2495,7 @@ const TABS = [
   { id: "jidaibetsu",   label: "③時代",     icon: Clock },
   { id: "kijunbetsu",   label: "④基準",     icon: Star },
   { id: "nigatebun",    label: "⑤分析",     icon: BarChart2 },
+  { id: "worldmap",     label: "地図",       icon: Map },
 ];
 
 // 📍 CHECKPOINT: フェーズ5 完了
@@ -3970,6 +3972,383 @@ function KisochishikiTab({ onNavigate, globalProgress, setGlobalProgress, testHi
 
 // 📍 CHECKPOINT: フェーズ9 完了
 
+// ─── 世界遺産 座標データ ──────────────────────────────────────
+const HERITAGE_COORDS = {
+  // ── ヨーロッパ ──
+  rome:            [12.49, 41.89],
+  venice:          [12.33, 45.44],
+  florence:        [11.26, 43.77],
+  pompeii:         [14.49, 40.75],
+  pisa:            [10.39, 43.72],
+  amalfi:          [14.60, 40.63],
+  versailles:      [2.12,  48.80],
+  mont_saint_michel:[-1.51,48.64],
+  chartres:        [1.49,  48.45],
+  avignon:         [4.81,  43.95],
+  alhambra:        [-3.59, 37.18],
+  sagrada_familia: [2.17,  41.40],
+  burgos:          [-3.70, 42.34],
+  stonehenge:      [-1.83, 51.18],
+  tower_of_london: [-0.08, 51.51],
+  ironbridge:      [-2.49, 52.63],
+  westminster:     [-0.13, 51.50],
+  cologne:         [6.96,  50.94],
+  potsdam:         [13.06, 52.40],
+  auschwitz:       [19.22, 50.03],
+  acropolis:       [23.73, 37.97],
+  delphi:          [22.50, 38.48],
+  dubrovnik:       [18.11, 42.64],
+  budapest:        [19.05, 47.50],
+  prague:          [14.40, 50.09],
+  cesky_krumlov:   [14.31, 48.81],
+  vienna:          [16.37, 48.21],
+  hallstatt:       [13.65, 47.56],
+  st_petersburg:   [30.32, 59.94],
+  kremlin:         [37.62, 55.75],
+  edinburgh:       [-3.19, 55.95],
+  tallinn:         [24.75, 59.44],
+  krakow:          [19.94, 50.06],
+  amsterdam:       [4.90,  52.37],
+  cologne_area:    [6.96,  50.94],
+  blenheim:        [-1.36, 51.84],
+  bath:            [-2.36, 51.38],
+  bruges:          [3.22,  51.21],
+  toledo:          [-4.02, 39.86],
+  mont_blanc:      [-0.15, 42.68],
+  // ── アジア（中国） ──
+  great_wall:      [116.57, 40.43],
+  forbidden_city:  [116.40, 39.92],
+  terracotta:      [109.27, 34.38],
+  potala:          [91.12,  29.66],
+  taishan:         [117.10, 36.25],
+  huangshan:       [118.16, 30.13],
+  jiuzhaigou:      [103.91, 33.15],
+  suzhou:          [120.63, 31.32],
+  // ── アジア（インド・東南アジア） ──
+  taj_mahal:       [78.04,  27.17],
+  ajanta:          [75.70,  20.55],
+  ellora:          [75.18,  20.02],
+  khajuraho:       [79.92,  24.85],
+  angkor:          [103.87, 13.41],
+  borobudur:       [110.20, -7.61],
+  prambanan:       [110.49, -7.75],
+  halong_bay:      [107.18, 20.91],
+  hoi_an:          [108.33, 15.88],
+  ayutthaya:       [100.56, 14.35],
+  samarkand:       [66.97,  39.65],
+  kathmandu:       [85.30,  27.71],
+  sigiriya:        [80.76,   7.96],
+  gyeongju:        [129.23, 35.86],
+  changdeokgung:   [126.99, 37.58],
+  luang_prabang:   [102.13, 19.89],
+  bagan:           [94.86,  21.17],
+  sukhothai:       [99.82,  17.02],
+  mohenjo_daro:    [68.14,  27.33],
+  // ── 中東 ──
+  petra:           [35.44,  30.33],
+  jerusalem:       [35.23,  31.78],
+  persepolis:      [52.89,  29.94],
+  isfahan:         [51.68,  32.66],
+  babylon:         [44.42,  32.54],
+  damascus:        [36.29,  33.51],
+  hegra:           [37.91,  26.72],
+  gobekli_tepe:    [38.92,  37.22],
+  ephesus:         [27.34,  37.94],
+  pamukkale:       [29.12,  37.92],
+  troy:            [26.24,  39.96],
+  // ── アフリカ ──
+  pyramids:        [31.13,  29.98],
+  abu_simbel:      [31.63,  22.34],
+  goree:           [-17.40, 14.67],
+  timbuktu:        [-3.00,  16.77],
+  great_zimbabwe:  [30.93, -20.27],
+  victoria_falls:  [25.86, -17.92],
+  serengeti:       [34.83,  -2.33],
+  ngorongoro:      [35.50,  -3.20],
+  lalibela:        [39.05,  12.03],
+  robben_island:   [18.37, -33.81],
+  kilimanjaro:     [37.36,  -3.07],
+  okavango:        [22.90, -19.30],
+  djenne:          [-4.56,  13.91],
+  // ── 北米・中米 ──
+  grand_canyon:    [-112.11, 36.10],
+  yellowstone:     [-110.59, 44.42],
+  chichen_itza:    [-88.57,  20.68],
+  teotihuacan:     [-98.84,  19.69],
+  mesa_verde:      [-108.46, 37.23],
+  independence_hall:[-75.15, 39.95],
+  old_havana:      [-82.35,  23.13],
+  palenque:        [-92.04,  17.48],
+  // ── 南米 ──
+  machu_picchu:    [-72.55, -13.16],
+  galapagos:       [-90.96,  -0.97],
+  iguazu:          [-54.44, -25.69],
+  easter_island:   [-109.36,-27.12],
+  cartagena:       [-75.55,  10.42],
+  brasilia:        [-47.93, -15.78],
+  chan_chan:        [-79.07,  -8.10],
+  // ── オセアニア ──
+  great_barrier_reef:[147.70,-18.29],
+  sydney_opera:    [151.21, -33.86],
+  uluru:           [131.04, -25.34],
+  tongariro:       [175.64, -39.13],
+  kakadu:          [132.38, -12.89],
+  // ── 日本 ──
+  horyuji:         [135.73, 34.61],
+  himeji:          [134.69, 34.84],
+  yakushima:       [130.53, 30.33],
+  shirakami:       [140.10, 40.50],
+  kyoto:           [135.75, 35.01],
+  shirakawa:       [136.90, 36.26],
+  hiroshima:       [132.45, 34.39],
+  itsukushima:     [132.32, 34.30],
+  nara:            [135.84, 34.69],
+  nikko:           [139.60, 36.76],
+  ryukyu:          [127.80, 26.50],
+  kii:             [135.77, 33.87],
+  shiretoko:       [145.00, 44.10],
+  iwami:           [132.40, 35.10],
+  hiraizumi:       [141.12, 38.99],
+  ogasawara:       [142.10, 27.10],
+  fujisan:         [138.73, 35.36],
+  tomioka:         [138.89, 36.27],
+  meiji:           [129.74, 32.62],
+  lecorbusier:     [135.70, 34.69],
+  munakata:        [130.53, 33.90],
+  nagasaki:        [129.88, 32.75],
+  mozu:            [135.49, 34.56],
+  amami:           [129.30, 28.20],
+  jomon:           [140.80, 40.90],
+  sado:            [138.40, 38.00],
+};
+
+// ─── 世界地図タブ ─────────────────────────────────────────────
+const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+
+function WorldMapTab() {
+  const [selected, setSelected]   = useState(null);
+  const [tooltip,  setTooltip]    = useState(null);
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [regionFilter, setRegionFilter] = useState("all");
+
+  const allSites = useMemo(() =>
+    [...worldHeritageData, ...japanHeritageData].filter(h => HERITAGE_COORDS[h.id]),
+    []
+  );
+
+  const filtered = useMemo(() => allSites.filter(h => {
+    if (typeFilter !== "all" && h.type !== typeFilter) return false;
+    if (regionFilter !== "all" && h.region !== regionFilter) return false;
+    return true;
+  }), [allSites, typeFilter, regionFilter]);
+
+  const markerColor = (type) =>
+    type === "文化遺産" ? "#FF8FAB"
+    : type === "自然遺産" ? "#4ade80"
+    : "#c084fc";
+
+  const stats = useMemo(() => ({
+    total:   allSites.length,
+    culture: allSites.filter(h => h.type === "文化遺産").length,
+    nature:  allSites.filter(h => h.type === "自然遺産").length,
+    mixed:   allSites.filter(h => h.type === "複合遺産").length,
+  }), [allSites]);
+
+  return (
+    <div>
+      <div className="section-title">🗺️ 世界遺産マップ</div>
+
+      {/* 凡例・統計 */}
+      <div className="card" style={{ marginBottom:10 }}>
+        <div style={{ display:"flex", gap:14, flexWrap:"wrap", fontSize:12, marginBottom:8 }}>
+          <span><span style={{ color:"#FF8FAB", fontWeight:700 }}>●</span> 文化遺産 {stats.culture}件</span>
+          <span><span style={{ color:"#4ade80", fontWeight:700 }}>●</span> 自然遺産 {stats.nature}件</span>
+          <span><span style={{ color:"#c084fc", fontWeight:700 }}>●</span> 複合遺産 {stats.mixed}件</span>
+          <span style={{ color:"var(--color-text-light)" }}>計{stats.total}件表示中</span>
+        </div>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+          {["all","文化遺産","自然遺産","複合遺産"].map(t => (
+            <button
+              key={t}
+              className={`section-tab-btn${typeFilter===t?" active":""}`}
+              style={{ fontSize:11, padding:"4px 10px" }}
+              onClick={() => setTypeFilter(t)}
+            >
+              {t === "all" ? "すべて" : t}
+            </button>
+          ))}
+          <span style={{ fontSize:11, color:"var(--color-text-light)", padding:"4px 0" }}>｜</span>
+          {[
+            { id:"all", label:"全地域" },
+            { id:"europe", label:"欧州" },
+            { id:"asia", label:"アジア" },
+            { id:"africa", label:"アフリカ" },
+            { id:"middleEast", label:"中東" },
+            { id:"northAmerica", label:"北米" },
+            { id:"southAmerica", label:"南米" },
+            { id:"oceania", label:"オセアニア" },
+          ].map(r => (
+            <button
+              key={r.id}
+              className={`section-tab-btn${regionFilter===r.id?" active":""}`}
+              style={{ fontSize:11, padding:"4px 10px" }}
+              onClick={() => setRegionFilter(r.id)}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 地図本体 */}
+      <div style={{
+        background:"#0a1628",
+        borderRadius:12,
+        overflow:"hidden",
+        marginBottom:12,
+        border:"1px solid rgba(168,216,234,0.2)",
+        position:"relative"
+      }}>
+        <ComposableMap
+          projection="geoEqualEarth"
+          style={{ width:"100%", height:"auto" }}
+          projectionConfig={{ scale: 140 }}
+        >
+          <ZoomableGroup center={[20, 10]} zoom={1}>
+            <Geographies geography={GEO_URL}>
+              {({ geographies }) =>
+                geographies.map(geo => (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    style={{
+                      default: { fill:"#1e3a5f", stroke:"#2d5a8e", strokeWidth:0.4, outline:"none" },
+                      hover:   { fill:"#254a75", stroke:"#2d5a8e", strokeWidth:0.4, outline:"none" },
+                      pressed: { fill:"#1e3a5f", outline:"none" },
+                    }}
+                  />
+                ))
+              }
+            </Geographies>
+
+            {filtered.map(site => {
+              const coords = HERITAGE_COORDS[site.id];
+              const color  = markerColor(site.type);
+              return (
+                <Marker key={site.id} coordinates={coords}>
+                  <circle
+                    r={selected?.id === site.id ? 7 : 5}
+                    fill={color}
+                    fillOpacity={0.85}
+                    stroke="#fff"
+                    strokeWidth={selected?.id === site.id ? 1.5 : 0.8}
+                    style={{ cursor:"pointer", transition:"r 0.15s" }}
+                    onClick={() => setSelected(site)}
+                    onMouseEnter={() => setTooltip(site)}
+                    onMouseLeave={() => setTooltip(null)}
+                  />
+                </Marker>
+              );
+            })}
+          </ZoomableGroup>
+        </ComposableMap>
+
+        {/* ツールチップ */}
+        {tooltip && !selected && (
+          <div style={{
+            position:"absolute", bottom:12, left:"50%", transform:"translateX(-50%)",
+            background:"rgba(0,0,0,0.82)", color:"#fff", padding:"5px 12px",
+            borderRadius:20, fontSize:12, pointerEvents:"none", whiteSpace:"nowrap",
+            maxWidth:"90%", textOverflow:"ellipsis", overflow:"hidden"
+          }}>
+            {tooltip.countryFlag} {tooltip.name}
+          </div>
+        )}
+      </div>
+
+      {/* 選択した遺産の詳細カード */}
+      {selected && (
+        <div className="card" style={{ position:"relative" }}>
+          <button
+            onClick={() => setSelected(null)}
+            style={{ position:"absolute", top:10, right:10, background:"none", border:"none",
+              cursor:"pointer", fontSize:18, color:"var(--color-text-light)" }}
+          >✕</button>
+          <div style={{ display:"flex", gap:12, alignItems:"flex-start" }}>
+            {selected.image && (
+              <img
+                src={selected.image}
+                alt={selected.name}
+                style={{ width:90, height:70, objectFit:"cover", borderRadius:8, flexShrink:0 }}
+                onError={e => { e.target.style.display="none"; }}
+              />
+            )}
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontWeight:700, fontSize:15, marginBottom:2 }}>
+                {selected.countryFlag} {selected.name}
+              </div>
+              <div style={{ fontSize:12, color:"var(--color-text-light)", marginBottom:6 }}>
+                {selected.nameEn} · {selected.country} · {selected.year}年
+              </div>
+              <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:6 }}>
+                <span className={`badge ${selected.type==="文化遺産"?"badge-culture":selected.type==="自然遺産"?"badge-nature":"badge-mixed"}`}>
+                  {selected.type}
+                </span>
+                {selected.criteria.map(c => (
+                  <span key={c} className="badge badge-criteria">基準{c}</span>
+                ))}
+              </div>
+              <div style={{ fontSize:12, lineHeight:1.6, color:"var(--color-text)", marginBottom:8 }}>
+                {selected.description}
+              </div>
+              {selected.examTips && selected.examTips.length > 0 && (
+                <div style={{ marginBottom:8 }}>
+                  {selected.examTips.slice(0,2).map((t,i) => (
+                    <div key={i} style={{ fontSize:11, color:"var(--color-text-light)", marginBottom:2 }}>💡 {t}</div>
+                  ))}
+                </div>
+              )}
+              <div style={{ display:"flex", gap:8 }}>
+                <YouTubeButton query={selected.youtubeQuery || selected.name} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* サイト一覧（フィルタ後） */}
+      {!selected && (
+        <div className="card">
+          <div className="card-title">📋 遺産一覧（{filtered.length}件）</div>
+          <div style={{ maxHeight:280, overflowY:"auto" }}>
+            {filtered.map(site => (
+              <div
+                key={site.id}
+                onClick={() => setSelected(site)}
+                style={{
+                  display:"flex", alignItems:"center", gap:10, padding:"7px 0",
+                  borderBottom:"1px solid var(--color-border)", cursor:"pointer"
+                }}
+              >
+                <span style={{
+                  width:8, height:8, borderRadius:"50%",
+                  background:markerColor(site.type), flexShrink:0
+                }} />
+                <span style={{ flex:1, fontSize:13 }}>
+                  {site.countryFlag} {site.name}
+                </span>
+                <span style={{ fontSize:11, color:"var(--color-text-light)", flexShrink:0 }}>
+                  {site.year}年
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── 地域定義 ─────────────────────────────────────────────
 const REGIONS = [
   { id:"asia",         label:"アジア（日本含む）", emoji:"🌏", color:"rgba(255,143,171,0.15)",  border:"#FF8FAB" },
@@ -5308,6 +5687,7 @@ export default function App() {
       case "jidaibetsu":   return <JidaibetsuTab {...tabProps} />;
       case "kijunbetsu":   return <KijunbetsuTab {...tabProps} />;
       case "nigatebun":    return <NigatebunTab {...tabProps} />;
+      case "worldmap":     return <WorldMapTab />;
       default:             return null;
     }
   };
