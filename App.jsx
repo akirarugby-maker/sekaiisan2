@@ -4202,61 +4202,64 @@ function WorldMapTab() {
 
       {/* 地図本体 */}
       <div style={{
-        background:"#0a1628",
+        background:"#fff",
         borderRadius:12,
-        overflow:"hidden",
+        overflowX:"auto",
+        overflowY:"auto",
         marginBottom:12,
-        border:"1px solid rgba(168,216,234,0.2)",
-        position:"relative"
+        border:"1px solid rgba(0,0,0,0.12)",
+        position:"relative",
+        WebkitOverflowScrolling:"touch",
       }}>
-        <ComposableMap
-          projection="geoEqualEarth"
-          style={{ width:"100%", height:"auto" }}
-          projectionConfig={{ scale: 140 }}
-        >
-          <ZoomableGroup center={[20, 10]} zoom={1}>
-            <Geographies geography={GEO_URL}>
-              {({ geographies }) =>
-                geographies.map(geo => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    style={{
-                      default: { fill:"#1e3a5f", stroke:"#2d5a8e", strokeWidth:0.4, outline:"none" },
-                      hover:   { fill:"#254a75", stroke:"#2d5a8e", strokeWidth:0.4, outline:"none" },
-                      pressed: { fill:"#1e3a5f", outline:"none" },
-                    }}
-                  />
-                ))
-              }
-            </Geographies>
+        <div style={{ minWidth:900, position:"relative" }}>
+          <ComposableMap
+            projection="geoEqualEarth"
+            style={{ width:"100%", height:"auto", display:"block" }}
+            projectionConfig={{ scale: 420 }}
+          >
+            <ZoomableGroup center={[20, 10]} zoom={1}>
+              <Geographies geography={GEO_URL}>
+                {({ geographies }) =>
+                  geographies.map(geo => (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      style={{
+                        default: { fill:"#d4e6c3", stroke:"#aac89a", strokeWidth:0.4, outline:"none" },
+                        hover:   { fill:"#c5dbb0", stroke:"#aac89a", strokeWidth:0.4, outline:"none" },
+                        pressed: { fill:"#d4e6c3", outline:"none" },
+                      }}
+                    />
+                  ))
+                }
+              </Geographies>
 
-            {filtered.map(site => {
-              const coords = HERITAGE_COORDS[site.id];
-              const color  = markerColor(site.type);
-              return (
-                <Marker key={site.id} coordinates={coords}>
-                  <circle
-                    r={selected?.id === site.id ? 7 : 5}
-                    fill={color}
-                    fillOpacity={0.85}
-                    stroke="#fff"
-                    strokeWidth={selected?.id === site.id ? 1.5 : 0.8}
-                    style={{ cursor:"pointer", transition:"r 0.15s" }}
-                    onClick={() => setSelected(site)}
-                    onMouseEnter={() => setTooltip(site)}
-                    onMouseLeave={() => setTooltip(null)}
-                  />
-                </Marker>
-              );
-            })}
-          </ZoomableGroup>
-        </ComposableMap>
+              {filtered.map(site => {
+                const coords = HERITAGE_COORDS[site.id];
+                const color  = markerColor(site.type);
+                return (
+                  <Marker key={site.id} coordinates={coords}>
+                    <circle
+                      r={selected?.id === site.id ? 6 : 4}
+                      fill={color}
+                      fillOpacity={0.9}
+                      stroke="#fff"
+                      strokeWidth={selected?.id === site.id ? 1.5 : 0.8}
+                      style={{ cursor:"pointer", transition:"r 0.15s" }}
+                      onClick={() => setSelected(site)}
+                      onMouseEnter={() => setTooltip(site)}
+                      onMouseLeave={() => setTooltip(null)}
+                    />
+                  </Marker>
+                );
+              })}
+            </ZoomableGroup>
+          </ComposableMap>
 
-        {/* ツールチップ */}
-        {tooltip && !selected && (
-          <div style={{
-            position:"absolute", bottom:12, left:"50%", transform:"translateX(-50%)",
+          {/* ツールチップ */}
+          {tooltip && !selected && (
+            <div style={{
+              position:"absolute", bottom:12, left:"50%", transform:"translateX(-50%)",
             background:"rgba(0,0,0,0.82)", color:"#fff", padding:"5px 12px",
             borderRadius:20, fontSize:12, pointerEvents:"none", whiteSpace:"nowrap",
             maxWidth:"90%", textOverflow:"ellipsis", overflow:"hidden"
@@ -4264,6 +4267,7 @@ function WorldMapTab() {
             {tooltip.countryFlag} {tooltip.name}
           </div>
         )}
+        </div>{/* /minWidth wrapper */}
       </div>
 
       {/* 選択した遺産の詳細カード */}
