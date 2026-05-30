@@ -5647,13 +5647,16 @@ export default function App() {
       if (saved.progress)     setProgress(saved.progress);
       if (saved.testHistory)  setTestHistory(saved.testHistory);
       if (saved.reviewStatus) setReviewStatus(saved.reviewStatus);
+      if (saved.activeTab && TABS.some(t => t.id === saved.activeTab)) {
+        setActiveTab(saved.activeTab);
+      }
     }
   }, []);
 
   // ── localStorage保存 ─────────────────────────────────────
   useEffect(() => {
-    saveToStorage({ examDate, progress, testHistory, reviewStatus });
-  }, [examDate, progress, testHistory, reviewStatus]);
+    saveToStorage({ examDate, progress, testHistory, reviewStatus, activeTab });
+  }, [examDate, progress, testHistory, reviewStatus, activeTab]);
 
   // ── タブ遷移（クロスナビゲーション対応） ─────────────────
   const handleNavigate = useCallback((tabId, keyword) => {
