@@ -4219,7 +4219,7 @@ function WorldMapTab() {
             style={{ width:"100%", height:"auto", display:"block" }}
             projectionConfig={{ scale: 420 }}
           >
-            <ZoomableGroup center={[20, 10]} zoom={1}>
+            <ZoomableGroup center={[70, 20]} zoom={1}>
               <Geographies geography={GEO_URL}>
                 {({ geographies }) =>
                   geographies.map(geo => (
