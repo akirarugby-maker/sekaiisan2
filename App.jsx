@@ -4148,11 +4148,11 @@ function WorldMapTab() {
     : "#c084fc";
 
   const stats = useMemo(() => ({
-    total:   allSites.length,
-    culture: allSites.filter(h => h.type === "文化遺産").length,
-    nature:  allSites.filter(h => h.type === "自然遺産").length,
-    mixed:   allSites.filter(h => h.type === "複合遺産").length,
-  }), [allSites]);
+    total:   filtered.length,
+    culture: filtered.filter(h => h.type === "文化遺産").length,
+    nature:  filtered.filter(h => h.type === "自然遺産").length,
+    mixed:   filtered.filter(h => h.type === "複合遺産").length,
+  }), [filtered]);
 
   return (
     <div>
@@ -4164,7 +4164,9 @@ function WorldMapTab() {
           <span><span style={{ color:"#FF8FAB", fontWeight:700 }}>●</span> 文化遺産 {stats.culture}件</span>
           <span><span style={{ color:"#4ade80", fontWeight:700 }}>●</span> 自然遺産 {stats.nature}件</span>
           <span><span style={{ color:"#c084fc", fontWeight:700 }}>●</span> 複合遺産 {stats.mixed}件</span>
-          <span style={{ color:"var(--color-text-light)" }}>計{stats.total}件表示中</span>
+          <span style={{ color:"var(--color-text-light)", fontWeight: typeFilter!=="all"||regionFilter!=="all" ? 700 : 400 }}>
+            計{stats.total}件表示中{(typeFilter!=="all"||regionFilter!=="all") ? "（フィルタ中）" : ""}
+          </span>
         </div>
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
           {["all","文化遺産","自然遺産","複合遺産"].map(t => (
